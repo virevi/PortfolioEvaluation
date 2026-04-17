@@ -1,0 +1,1295 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Portfolio Terminal V3</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.plot.ly/plotly-2.31.1.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css"
+    />
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+
+    <style>
+      /* Premium Terminal Color Palette */
+      :root {
+        --bg-dark: #0b1118;
+        --panel-bg: rgba(22, 32, 44, 0.7); /* Adjusted for glassmorphism */
+        --panel-border: rgba(255, 255, 255, 0.08);
+        --text-main: #cbd5e1;
+        --text-muted: #64748b;
+        --text-bright: #f8fafc;
+        --accent-blue: #38bdf8;
+        --accent-blue-hover: #0284c7;
+        --pos-green: #22c55e;
+        --neg-red: #ef4444;
+        --sidebar-width: 250px;
+        --ticker-height: 40px;
+      }
+
+      body {
+        background: var(--bg-dark);
+        color: var(--text-main);
+        font-family: "Inter", sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+      }
+      h1,
+      h2 {
+        color: var(--text-bright);
+        font-weight: 700;
+        margin-top: 0;
+      }
+
+      /* Typography Utilities */
+      .mono {
+        font-family: "Fira Code", monospace;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.5px;
+      }
+
+      /* Glassmorphism Sidebar */
+      .sidebar {
+        width: var(--sidebar-width);
+        background: var(--panel-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-right: 1px solid var(--panel-border);
+        display: flex;
+        flex-direction: column;
+        padding: 24px 0;
+        z-index: 100;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+      }
+      .sidebar-logo {
+        font-size: 1.4em;
+        font-weight: 900;
+        letter-spacing: 1px;
+        color: var(--accent-blue);
+        padding: 0 24px 32px 24px;
+        border-bottom: 1px solid var(--panel-border);
+        margin-bottom: 24px;
+      }
+      .nav-links {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 0 16px;
+      }
+      .nav-links a {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-weight: 600;
+        padding: 12px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .nav-links a:hover {
+        color: var(--text-bright);
+        background: rgba(56, 189, 248, 0.1);
+      }
+      .nav-links a.active {
+        color: var(--text-bright);
+        background: var(--accent-blue);
+        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+      }
+
+      /* Main Content Area */
+      .main-wrapper {
+        flex: 1;
+        overflow-y: auto;
+        padding: 32px;
+        padding-bottom: calc(32px + var(--ticker-height));
+        scroll-behavior: smooth;
+        position: relative;
+      }
+      .tab-content {
+        display: none;
+        animation: fadeIn 0.3s ease;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(5px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Glassmorphism Master Controls (Sticky Top) */
+      .master-controls {
+        background: var(--panel-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        padding: 16px 24px;
+        border-radius: 12px;
+        border: 1px solid var(--panel-border);
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        margin-bottom: 32px;
+        flex-wrap: wrap;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+      select,
+      input[type="file"] {
+        background: rgba(0, 0, 0, 0.3);
+        color: var(--text-bright);
+        border: 1px solid var(--panel-border);
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-family: "Inter", sans-serif;
+        font-size: 0.9em;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      select:focus {
+        border-color: var(--accent-blue);
+      }
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .control-label {
+        font-size: 0.85em;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .btn-primary {
+        background: var(--accent-blue);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+      }
+      .btn-primary:hover {
+        background: var(--accent-blue-hover);
+        transform: translateY(-1px);
+      }
+
+      /* KPI Cards */
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+      .kpi-card {
+        background: rgba(22, 32, 44, 0.4);
+        border-radius: 12px;
+        border: 1px solid var(--panel-border);
+        padding: 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .kpi-label {
+        font-size: 0.85em;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .kpi-val {
+        font-size: 2em;
+        font-weight: 700;
+        color: var(--text-bright);
+      }
+
+      /* Chart & Table Panels */
+      .panel {
+        background: rgba(22, 32, 44, 0.4);
+        border-radius: 12px;
+        border: 1px solid var(--panel-border);
+        padding: 24px;
+        margin-bottom: 32px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+      .grid-2-col {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+      @media (max-width: 1200px) {
+        .grid-2-col {
+          grid-template-columns: 1fr;
+        }
+      }
+      .chart-container {
+        height: 450px;
+        width: 100%;
+      }
+
+      /* Transaction Pills */
+      .pill {
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        font-weight: 700;
+        display: inline-block;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .pill-buy {
+        background: rgba(34, 197, 94, 0.15);
+        color: var(--pos-green);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+      }
+      .pill-sell {
+        background: rgba(239, 68, 68, 0.15);
+        color: var(--neg-red);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      }
+
+      /* Heads-Up Ticker Tape */
+      .ticker-wrap {
+        width: calc(100% - var(--sidebar-width));
+        height: var(--ticker-height);
+        background: var(--bg-dark);
+        border-top: 1px solid var(--panel-border);
+        position: fixed;
+        bottom: 0;
+        left: var(--sidebar-width);
+        z-index: 200;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+      }
+      .ticker-move {
+        display: flex;
+        white-space: nowrap;
+        animation-name: ticker;
+        animation-timing-function: linear;
+        animation-iteration-count: infinite;
+        padding-left: 100%;
+      }
+      .ticker-move:hover {
+        animation-play-state: paused;
+      }
+      .ticker-item {
+        margin-right: 48px;
+        font-size: 0.9em;
+        font-weight: 600;
+        color: var(--text-muted);
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .ticker-scrip {
+        color: var(--text-bright);
+      }
+      @keyframes ticker {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-100%);
+        }
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg-dark);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-muted);
+      }
+
+      /* DataTables Overrides */
+      .dataTables_wrapper,
+      .dataTables_info,
+      .dataTables_length label,
+      .dataTables_filter label {
+        color: var(--text-muted) !important;
+        font-size: 0.9em;
+      }
+      .dataTables_wrapper input[type="search"],
+      .dataTables_wrapper select {
+        background: rgba(0, 0, 0, 0.3);
+        color: var(--text-bright) !important;
+        border: 1px solid var(--panel-border);
+        border-radius: 4px;
+        padding: 4px 8px;
+        outline: none;
+      }
+      .dataTables_wrapper input[type="search"]:focus,
+      .dataTables_wrapper select:focus {
+        border-color: var(--accent-blue);
+      }
+      table.dataTable.display tbody tr.odd,
+      table.dataTable.display tbody tr.even {
+        background-color: transparent;
+      }
+      table.dataTable.display tbody tr {
+        border-bottom: 1px solid var(--panel-border);
+        transition: background 0.15s;
+      }
+      table.dataTable.display tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.02);
+      }
+      table.dataTable thead th {
+        border-bottom: 2px solid var(--panel-border);
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-size: 0.8em;
+        letter-spacing: 0.5px;
+        padding-bottom: 12px;
+      }
+      table.dataTable.no-footer {
+        border-bottom: none;
+      }
+      .text-muted {
+        color: var(--text-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="sidebar-logo">Portfolio Analytics</div>
+      <nav class="nav-links">
+        <a class="tab-link active" onclick="switchTab('dashboardTab')"
+          >Dashboard</a
+        >
+        <a class="tab-link" onclick="switchTab('transactionsTab')"
+          >Transactions Ledger</a
+        >
+        <a class="tab-link" onclick="switchTab('reportsTab')"
+          >Grouping Reports</a
+        >
+        <a class="tab-link" onclick="switchTab('hedgeTab')">Risk & Hedging</a>
+      </nav>
+    </aside>
+
+    <main class="main-wrapper">
+      <div class="master-controls">
+        <div class="control-group">
+          <span class="control-label">Data</span>
+          <input
+            type="file"
+            id="txFile"
+            accept=".csv"
+            title="Transactions CSV"
+          />
+          <input type="file" id="pxFile" accept=".csv" title="Prices CSV" />
+        </div>
+        <div
+          style="
+            width: 1px;
+            height: 30px;
+            background: var(--panel-border);
+            margin: 0 10px;
+          "
+        ></div>
+        <div class="control-group">
+          <span class="control-label">Folio</span>
+          <select id="f_folio">
+            <option value="All">All Entities</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <span class="control-label">Investor</span>
+          <select id="f_investor">
+            <option value="All">All Investors</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <span class="control-label">Broker</span>
+          <select id="f_demat">
+            <option value="All">All Demats</option>
+          </select>
+        </div>
+        <button id="analyzeBtn" class="btn-primary" style="margin-left: auto">
+          Run Analytics
+        </button>
+        <span
+          id="loadingTxt"
+          style="
+            display: none;
+            color: var(--pos-green);
+            font-weight: bold;
+            font-size: 0.9em;
+          "
+          >Calculating...</span
+        >
+      </div>
+
+      <div id="dashboardTab" class="tab-content active">
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">Current Value</span
+            ><span id="c_val" class="kpi-val mono">–</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Net Invested</span
+            ><span id="i_val" class="kpi-val mono">–</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Absolute Gain</span
+            ><span id="g_val" class="kpi-val mono">–</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Time-Weighted XIRR</span
+            ><span
+              id="x_val"
+              class="kpi-val mono"
+              style="color: var(--accent-blue)"
+              >–</span
+            >
+          </div>
+        </div>
+
+        <div class="grid-2-col">
+          <div class="panel" style="margin-bottom: 0">
+            <h2>Portfolio Trajectory vs Benchmark</h2>
+            <div id="chart" class="chart-container"></div>
+          </div>
+          <div class="panel" style="margin-bottom: 0">
+            <h2>Holdings Heatmap</h2>
+            <div id="heatmap" class="chart-container"></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Live Positions</h2>
+          <table
+            id="holdingsTable"
+            class="display"
+            style="width: 100%; color: var(--text-bright)"
+          >
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>30D Trend</th>
+                <th>Shares</th>
+                <th>LTP</th>
+                <th>Invested</th>
+                <th>Current Value</th>
+                <th>Gain</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="transactionsTab" class="tab-content">
+        <div class="panel">
+          <h2>Trade Ledger</h2>
+          <table
+            id="txTable"
+            class="display"
+            style="width: 100%; color: var(--text-bright)"
+          >
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Ticker</th>
+                <th>Type</th>
+                <th>Shares</th>
+                <th>Price</th>
+                <th>Folio</th>
+                <th>Investor</th>
+                <th>Demat</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="reportsTab" class="tab-content">
+        <div class="grid-2-col">
+          <div class="panel">
+            <h2>Performance by Folio</h2>
+            <table
+              id="repFolioTable"
+              class="display"
+              style="width: 100%; color: var(--text-bright)"
+            >
+              <thead>
+                <tr>
+                  <th>Folio</th>
+                  <th>Invested</th>
+                  <th>Current Value</th>
+                  <th>Gain</th>
+                  <th>XIRR (%)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="panel">
+            <h2>Performance by Investor</h2>
+            <table
+              id="repInvestorTable"
+              class="display"
+              style="width: 100%; color: var(--text-bright)"
+            >
+              <thead>
+                <tr>
+                  <th>Investor</th>
+                  <th>Invested</th>
+                  <th>Current Value</th>
+                  <th>Gain</th>
+                  <th>XIRR (%)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Performance by Demat</h2>
+          <table
+            id="repDematTable"
+            class="display"
+            style="width: 100%; color: var(--text-bright)"
+          >
+            <thead>
+              <tr>
+                <th>Demat</th>
+                <th>Invested</th>
+                <th>Current Value</th>
+                <th>Gain</th>
+                <th>XIRR (%)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="hedgeTab" class="tab-content">
+        <div class="grid-2-col">
+          <div class="panel">
+            <h2>Delta Hedging Simulator</h2>
+            <p
+              style="
+                color: var(--text-muted);
+                font-size: 0.9em;
+                margin-bottom: 24px;
+              "
+            >
+              Calculate the required NIFTY Put Option lots to achieve a
+              delta-neutral hedge based on your portfolio's specific volatility.
+            </p>
+
+            <div
+              class="kpi-grid"
+              style="grid-template-columns: 1fr 1fr; margin-bottom: 24px"
+            >
+              <div class="kpi-card">
+                <span class="kpi-label">Portfolio Beta</span
+                ><span id="h_beta" class="kpi-val mono">–</span>
+              </div>
+              <div class="kpi-card">
+                <span class="kpi-label">Beta-Adjusted Exposure</span
+                ><span id="h_exp" class="kpi-val mono">–</span>
+              </div>
+            </div>
+
+            <div
+              class="control-group"
+              style="
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+                background: rgba(0, 0, 0, 0.2);
+                padding: 20px;
+                border-radius: 8px;
+              "
+            >
+              <label
+                class="control-label"
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+                >NIFTY Spot Price:
+                <input
+                  type="number"
+                  id="niftySpot"
+                  value="24500"
+                  class="mono"
+                  style="width: 120px"
+              /></label>
+
+              <div
+                style="
+                  width: 100%;
+                  border-top: 1px dashed var(--panel-border);
+                  padding-top: 12px;
+                  margin-top: -4px;
+                "
+              ></div>
+              <label
+                class="control-label"
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  color: var(--pos-green);
+                "
+                >Put Strike (Buy PE):
+                <input
+                  type="number"
+                  id="putStrike"
+                  value="24000"
+                  class="mono"
+                  style="width: 120px"
+              /></label>
+              <label
+                class="control-label"
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+                >Put Premium Paid (₹):
+                <input
+                  type="number"
+                  id="putPremium"
+                  value="350"
+                  class="mono"
+                  style="width: 120px"
+              /></label>
+
+              <div
+                style="
+                  width: 100%;
+                  border-top: 1px dashed var(--panel-border);
+                  padding-top: 12px;
+                  margin-top: -4px;
+                "
+              ></div>
+              <label
+                class="control-label"
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  color: var(--neg-red);
+                "
+                >Call Strike (Sell CE):
+                <input
+                  type="number"
+                  id="callStrike"
+                  value="25200"
+                  class="mono"
+                  style="width: 120px"
+              /></label>
+              <label
+                class="control-label"
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+                >Call Premium Recv (₹):
+                <input
+                  type="number"
+                  id="callPremium"
+                  value="200"
+                  class="mono"
+                  style="width: 120px"
+              /></label>
+
+              <div
+                style="
+                  width: 100%;
+                  border-top: 1px solid var(--panel-border);
+                  margin: 4px 0;
+                "
+              ></div>
+              <label
+                class="control-label"
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+                >NIFTY Lot Size:
+                <input
+                  type="number"
+                  id="niftyLot"
+                  value="65"
+                  class="mono"
+                  readonly
+                  style="width: 120px; opacity: 0.7"
+              /></label>
+
+              <button
+                id="calcHedgeBtn"
+                class="btn-primary"
+                style="width: 100%; margin-top: 10px"
+              >
+                Simulate Collar
+              </button>
+            </div>
+
+            <div
+              class="kpi-card"
+              style="
+                margin-top: 24px;
+                background: rgba(56, 189, 248, 0.1);
+                border-color: var(--accent-blue);
+              "
+            >
+              <span class="kpi-label" style="color: var(--accent-blue)"
+                >Required NIFTY Put Lots</span
+              >
+              <span id="h_lots" class="kpi-val mono" style="font-size: 2.5em"
+                >–</span
+              >
+              <span
+                id="h_cost"
+                style="
+                  color: var(--text-muted);
+                  font-size: 0.9em;
+                  margin-top: 8px;
+                "
+                class="mono"
+                >Total Premium Cost: ₹0</span
+              >
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Hedge Payoff Matrix</h2>
+            <p
+              style="
+                color: var(--text-muted);
+                font-size: 0.9em;
+                margin-bottom: 24px;
+              "
+            >
+              Visualizing the net portfolio value across severe market drawdowns
+              (Assuming 1 Delta at Expiry).
+            </p>
+            <div id="payoffChart" class="chart-container"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div class="ticker-wrap">
+      <div class="ticker-move" id="ticker-content"></div>
+    </div>
+
+    <script>
+      const formatINR = new Intl.NumberFormat("en-IN", {
+        maximumFractionDigits: 0,
+      });
+      const formatDec = new Intl.NumberFormat("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      let isFirstLoad = true;
+
+      // Tab Switcher with DataTables Auto-Adjust
+      function switchTab(tabId) {
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((t) => t.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-link")
+          .forEach((l) => l.classList.remove("active"));
+        document.getElementById(tabId).classList.add("active");
+        event.target.classList.add("active");
+
+        // Forces DataTables to recalculate widths when a hidden tab is opened
+        $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+      }
+
+      ["f_folio", "f_investor", "f_demat"].forEach((id) => {
+        document.getElementById(id).addEventListener("change", runAnalysis);
+      });
+
+      document
+        .getElementById("analyzeBtn")
+        .addEventListener("click", runAnalysis);
+
+      async function runAnalysis() {
+        const txFile = document.getElementById("txFile").files[0];
+        const pxFile = document.getElementById("pxFile").files[0];
+        if (!txFile || !pxFile) {
+          alert("Please upload both CSV files.");
+          return;
+        }
+
+        document.getElementById("loadingTxt").style.display = "inline-block";
+        const formData = new FormData();
+        formData.append("transactions", txFile);
+        formData.append("prices", pxFile);
+        formData.append("folio", document.getElementById("f_folio").value);
+        formData.append(
+          "investor",
+          document.getElementById("f_investor").value,
+        );
+        formData.append("demat", document.getElementById("f_demat").value);
+
+        try {
+          const response = await fetch("/api/analyze", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await response.json();
+          if (data.error) {
+            alert(data.error);
+            return;
+          }
+
+          if (isFirstLoad) {
+            populateDropdown("f_folio", data.filters_options.folios);
+            populateDropdown("f_investor", data.filters_options.investors);
+            populateDropdown("f_demat", data.filters_options.demats);
+            isFirstLoad = false;
+          }
+
+          // 1. KPIs
+          document.getElementById("c_val").innerText =
+            "₹" + formatINR.format(data.summary.CurrentValue);
+          document.getElementById("i_val").innerText =
+            "₹" + formatINR.format(data.summary.TotalInvested);
+          document.getElementById("g_val").innerHTML =
+            `<span style="color: ${data.summary.Gain >= 0 ? "var(--pos-green)" : "var(--neg-red)"}">₹${formatINR.format(Math.abs(data.summary.Gain))}</span>`;
+          document.getElementById("x_val").innerText = data.summary.XIRR
+            ? data.summary.XIRR.toFixed(2) + "%"
+            : "N/A";
+
+          // Store globally for the Hedge Simulator
+          window.currentPortfolioValue = data.summary.CurrentValue;
+          window.currentPortfolioBeta = data.summary.Beta;
+
+          // Update Hedge KPIs
+          document.getElementById("h_beta").innerText =
+            data.summary.Beta.toFixed(2);
+          const betaExposure = data.summary.CurrentValue * data.summary.Beta;
+          document.getElementById("h_exp").innerHTML =
+            `<span class="mono">₹${formatINR.format(Math.round(betaExposure))}</span>`;
+
+          // Auto-run the hedge simulation on load
+          simulateHedge();
+
+          // 2. Trajectory Chart (Added Net Invested Line)
+          const chartLayout = {
+            paper_bgcolor: "rgba(0,0,0,0)",
+            plot_bgcolor: "rgba(0,0,0,0)",
+            font: { color: "#cbd5e1", family: "Inter" },
+            hovermode: "x unified",
+            margin: { l: 50, r: 20, t: 20, b: 40 },
+            xaxis: { showgrid: true, gridcolor: "rgba(255,255,255,0.05)" },
+            yaxis: {
+              showgrid: true,
+              gridcolor: "rgba(255,255,255,0.05)",
+              tickprefix: "₹",
+            },
+          };
+          Plotly.newPlot(
+            "chart",
+            [
+              {
+                x: data.chart.dates,
+                y: data.chart.portfolio_abs,
+                type: "scatter",
+                name: "Portfolio Value",
+                line: { color: "#38bdf8", width: 3 },
+              },
+              {
+                x: data.chart.dates,
+                y: data.chart.nifty_abs,
+                type: "scatter",
+                name: "Simulated Nifty 50",
+                line: { color: "#64748b", dash: "dot", width: 2 },
+              },
+              {
+                x: data.chart.dates,
+                y: data.chart.invested_abs,
+                type: "scatter",
+                name: "Net Invested",
+                fill: "tozeroy",
+                fillcolor: "rgba(245, 158, 11, 0.05)",
+                line: { color: "#f59e0b", width: 2 },
+              },
+            ],
+            chartLayout,
+          );
+
+          // 3. Holdings Heatmap (Treemap)
+          const labels = data.holdings.map((h) => h.ScripName);
+          const parents = data.holdings.map((h) => "Portfolio");
+          const values = data.holdings.map((h) => h.CurrentValue);
+          const colors = data.holdings.map(
+            (h) => (h.Gain / h.NetInvested) * 100,
+          );
+
+          Plotly.newPlot(
+            "heatmap",
+            [
+              {
+                type: "treemap",
+                labels: labels,
+                parents: parents,
+                values: values,
+                marker: {
+                  colors: colors,
+                  colorscale: [
+                    [0, "#ef4444"],
+                    [0.5, "#16202c"],
+                    [1, "#22c55e"],
+                  ],
+                  cmid: 0,
+                },
+                texttemplate: "<b>%{label}</b><br>₹%{value:,.0f}",
+                hovertemplate:
+                  "<b>%{label}</b><br>Value: ₹%{value:,.0f}<br>Gain: %{color:.1f}%<extra></extra>",
+              },
+            ],
+            {
+              paper_bgcolor: "rgba(0,0,0,0)",
+              font: { color: "#fff", family: "Inter" },
+              margin: { l: 0, r: 0, t: 0, b: 0 },
+            },
+          );
+
+          // 4. Update Ticker Tape (With Dynamic Speed)
+          let tickerHtml = "";
+          data.holdings.forEach((h) => {
+            const pct =
+              h.NetInvested > 0
+                ? ((h.Gain / h.NetInvested) * 100).toFixed(2)
+                : 0;
+            const color = h.Gain >= 0 ? "var(--pos-green)" : "var(--neg-red)";
+            const arrow = h.Gain >= 0 ? "▲" : "▼";
+            tickerHtml += `<div class="ticker-item"><span class="ticker-scrip">${h.ScripName}</span> <span class="mono" style="margin-left:4px;">₹${formatDec.format(h["Close Price"])}</span> <span style="color: ${color}; margin-left:8px;" class="mono">${arrow} ${Math.abs(pct)}%</span></div>`;
+          });
+
+          const tickerEl = document.getElementById("ticker-content");
+          tickerEl.innerHTML = tickerHtml;
+
+          // Calculate constant velocity (e.g., 3.5 seconds per stock in the ticker)
+          // Minimum duration of 15 seconds so a single stock doesn't fly across instantly
+          const dynamicDuration = Math.max(15, data.holdings.length * 3.5);
+          tickerEl.style.animationDuration = dynamicDuration + "s";
+
+          // --- NATIVE DATATABLES FORMATTERS (INDIAN NUMBERING) ---
+          // Custom formatter to force Indian Lakhs/Crores across all monetary columns
+          const renderINRMono = (data, type) => {
+            if (type === "display") {
+              return `<span class="mono">${formatINR.format(data)}</span>`;
+            }
+            return data; // Return raw data for sorting/filtering
+          };
+
+          const renderGain = (data, type) => {
+            if (type === "display") {
+              const color = data >= 0 ? "var(--pos-green)" : "var(--neg-red)";
+              return `<span class="mono" style="color: ${color}; font-weight: 600;">${formatINR.format(data)}</span>`;
+            }
+            return data;
+          };
+          const renderBold = (data, type) =>
+            type === "display" ? `<b>${data}</b>` : data;
+
+          // 5. Update DataTables
+          // SVG Sparkline Generator
+          const renderSparkline = (data, type, row) => {
+            if (type !== "display" || !row.Trend || row.Trend.length === 0)
+              return "";
+            const values = row.Trend;
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+            const range = max - min || 1; // Prevent division by zero
+
+            const width = 80;
+            const height = 24;
+            const step = width / (values.length - 1 || 1);
+
+            // Map data to SVG coordinates
+            const points = values
+              .map((val, i) => {
+                const x = i * step;
+                const y = height - ((val - min) / range) * height;
+                return `${x},${y}`;
+              })
+              .join(" ");
+
+            // Green if 30-day trend is up, Red if down
+            const color =
+              values[values.length - 1] >= values[0]
+                ? "var(--pos-green)"
+                : "var(--neg-red)";
+
+            return `
+              <svg width="${width}" height="${height}" viewBox="0 -2 ${width} ${height + 4}" style="overflow: visible;">
+                <polyline fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="${points}" />
+              </svg>
+            `;
+          };
+
+          updateTable(
+            "#holdingsTable",
+            data.holdings,
+            [
+              { data: "ScripName", render: renderBold },
+              { data: "Trend", render: renderSparkline, orderable: false },
+              { data: "TotalShares", render: renderINRMono },
+              {
+                data: "Close Price",
+                render: (data, type) =>
+                  type === "display"
+                    ? `<span class="mono">${formatDec.format(data)}</span>`
+                    : data,
+              },
+              { data: "NetInvested", render: renderINRMono },
+              { data: "CurrentValue", render: renderINRMono },
+              { data: "Gain", render: renderGain },
+            ],
+            [[5, "desc"]],
+          );
+
+          updateTable(
+            "#txTable",
+            data.transactions,
+            [
+              { data: "Date", className: "mono text-muted" },
+              { data: "ScripName", render: renderBold },
+              {
+                data: "Transaction",
+                render: (data, type) => {
+                  if (type === "display") {
+                    const isBuy = data.toLowerCase() === "buy";
+                    return `<span class="pill ${isBuy ? "pill-buy" : "pill-sell"}">${data}</span>`;
+                  }
+                  return data;
+                },
+              },
+              { data: "ShareNos", className: "mono" },
+              { data: "Price", className: "mono" },
+              { data: "Folio" },
+              { data: "Investor" },
+              { data: "Demat" },
+            ],
+            [[0, "desc"]],
+          );
+
+          const reportCols = [
+            { data: "Group", render: renderBold },
+            { data: "Invested", render: renderINRMono },
+            { data: "CurrentValue", render: renderINRMono },
+            { data: "Gain", render: renderGain },
+            {
+              data: "XIRR",
+              className: "mono",
+              render: (data, type) => {
+                if (type === "display") {
+                  return data
+                    ? `<span style="color: var(--accent-blue); font-weight: 600;">${data.toFixed(2)}%</span>`
+                    : "N/A";
+                }
+                return data;
+              },
+            },
+          ];
+
+          updateTable("#repFolioTable", data.reports.folio, reportCols, [
+            [2, "desc"],
+          ]);
+          updateTable("#repInvestorTable", data.reports.investor, reportCols, [
+            [2, "desc"],
+          ]);
+          updateTable("#repDematTable", data.reports.demat, reportCols, [
+            [2, "desc"],
+          ]);
+        } catch (err) {
+          console.error(err);
+        } finally {
+          document.getElementById("loadingTxt").style.display = "none";
+        }
+      }
+
+      function populateDropdown(id, options) {
+        const select = document.getElementById(id);
+        options.forEach((opt) => {
+          select.add(new Option(opt, opt));
+        });
+      }
+
+      function updateTable(id, data, columns, order) {
+        if ($.fn.dataTable.isDataTable(id)) {
+          $(id).DataTable().clear().destroy();
+        }
+        $(id).DataTable({
+          data: data,
+          columns: columns,
+          order: order,
+          pageLength: 10,
+          autoWidth: false,
+        });
+      }
+      document
+        .getElementById("calcHedgeBtn")
+        .addEventListener("click", simulateHedge);
+
+      function simulateHedge() {
+        if (!window.currentPortfolioValue) return;
+
+        const spot = parseFloat(document.getElementById("niftySpot").value);
+        const putStrike = parseFloat(
+          document.getElementById("putStrike").value,
+        );
+        const putPremium = parseFloat(
+          document.getElementById("putPremium").value,
+        );
+        const callStrike = parseFloat(
+          document.getElementById("callStrike").value,
+        );
+        const callPremium = parseFloat(
+          document.getElementById("callPremium").value,
+        );
+        const lotSize = parseFloat(document.getElementById("niftyLot").value);
+
+        // 1. Calculate Required Lots based on Beta
+        const betaExposure =
+          window.currentPortfolioValue * window.currentPortfolioBeta;
+        const contractValue = spot * lotSize;
+        const exactLots = betaExposure / contractValue;
+        const roundedLots = Math.round(exactLots);
+
+        // Net Premium = Premium Paid for Puts - Premium Received from Calls
+        const netPremiumPerLot = putPremium - callPremium;
+        const totalNetPremiumCost = roundedLots * lotSize * netPremiumPerLot;
+
+        document.getElementById("h_lots").innerText = roundedLots;
+
+        // Format Cost vs Credit
+        const costColor =
+          totalNetPremiumCost > 0 ? "var(--neg-red)" : "var(--pos-green)";
+        const costLabel =
+          totalNetPremiumCost > 0 ? "Net Premium Cost" : "Net Premium Credit";
+        document.getElementById("h_cost").innerHTML =
+          `<span style="color: ${costColor}">${costLabel}: ₹${formatINR.format(Math.abs(totalNetPremiumCost))}</span>`;
+
+        // 2. Generate Payoff Matrix (-20% Crash to +20% Rally)
+        const crashScenarios = [-0.2, -0.1, 0, 0.1, 0.2];
+        const labels = crashScenarios.map(
+          (d) => `${d > 0 ? "+" : ""}${d * 100}%`,
+        );
+
+        const unhedgedValues = [];
+        const hedgedValues = [];
+
+        crashScenarios.forEach((move) => {
+          // Unhedged: Portfolio moves by Market Move * Beta
+          const portMove = move * window.currentPortfolioBeta;
+          const portValueAtExpiry =
+            window.currentPortfolioValue * (1 + portMove);
+          unhedgedValues.push(portValueAtExpiry);
+
+          // Hedged Calculation
+          const marketLevelAtExpiry = spot * (1 + move);
+
+          // Long Put Payoff: Max(0, Strike - Market)
+          const putPayoff =
+            Math.max(0, putStrike - marketLevelAtExpiry) *
+            roundedLots *
+            lotSize;
+
+          // Short Call Payoff: -Max(0, Market - Strike)
+          const callPayoff =
+            -Math.max(0, marketLevelAtExpiry - callStrike) *
+            roundedLots *
+            lotSize;
+
+          // Net = Portfolio Value + Option Payoffs - Initial Net Premium
+          const netHedgedValue =
+            portValueAtExpiry + putPayoff + callPayoff - totalNetPremiumCost;
+          hedgedValues.push(netHedgedValue);
+        });
+
+        // 3. Render Payoff Chart
+        const payoffLayout = {
+          paper_bgcolor: "rgba(0,0,0,0)",
+          plot_bgcolor: "rgba(0,0,0,0)",
+          font: { color: "#cbd5e1", family: "Inter" },
+          hovermode: "x unified",
+          margin: { l: 50, r: 20, t: 20, b: 40 },
+          xaxis: {
+            title: "NIFTY Move at Expiry",
+            showgrid: true,
+            gridcolor: "rgba(255,255,255,0.05)",
+          },
+          yaxis: {
+            title: "Net Portfolio Value (₹)",
+            showgrid: true,
+            gridcolor: "rgba(255,255,255,0.05)",
+            tickprefix: "₹",
+          },
+          barmode: "group",
+        };
+
+        Plotly.newPlot(
+          "payoffChart",
+          [
+            {
+              x: labels,
+              y: unhedgedValues,
+              type: "bar",
+              name: "Unhedged Value",
+              marker: { color: "#64748b" },
+            },
+            {
+              x: labels,
+              y: hedgedValues,
+              type: "bar",
+              name: "Collar Hedged Value",
+              marker: { color: "#38bdf8" },
+            },
+          ],
+          payoffLayout,
+        );
+      }
+    </script>
+  </body>
+</html>
