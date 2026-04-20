@@ -18,17 +18,17 @@
     <style>
       /* Premium Terminal Color Palette */
       :root {
-        --bg-dark: #0b1118;
-        --panel-bg: rgba(22, 32, 44, 0.7); /* Adjusted for glassmorphism */
-        --panel-border: rgba(255, 255, 255, 0.08);
-        --text-main: #cbd5e1;
-        --text-muted: #64748b;
-        --text-bright: #f8fafc;
-        --accent-blue: #38bdf8;
-        --accent-blue-hover: #0284c7;
-        --pos-green: #22c55e;
-        --neg-red: #ef4444;
-        --sidebar-width: 250px;
+        --bg-dark: #0a0e17; /* Deeper, richer midnight blue/black */
+        --panel-bg: #131b26; /* Solid, flat panel color instead of glassmorphism */
+        --panel-border: rgba(255, 255, 255, 0.05);
+        --text-main: #b2b5be;
+        --text-muted: #787b86;
+        --text-bright: #d1d4dc;
+        --accent-blue: #2962ff; /* Professional institutional blue */
+        --accent-blue-hover: #1e4bd8;
+        --pos-green: #089981; /* TradingView Matte Green */
+        --neg-red: #f23645; /* TradingView Matte Red */
+        --sidebar-width: 240px;
         --ticker-height: 40px;
       }
 
@@ -77,6 +77,14 @@
         padding: 0 24px 32px 24px;
         border-bottom: 1px solid var(--panel-border);
         margin-bottom: 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Centers the logo and text horizontally */
+        text-align: center; /* Ensures the text itself is centered */
+        line-height: 1.2;
+      }
+      .logo-accent {
+        color: var(--text-bright); /* Adds a premium two-tone text effect */
       }
       .nav-links {
         display: flex;
@@ -92,15 +100,41 @@
         border-radius: 8px;
         cursor: pointer;
         transition: all 0.2s ease;
+        display: flex; /* Aligns icon and text */
+        align-items: center;
+        gap: 12px; /* Spacing between icon and text */
+      }
+      .nav-links a svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor; /* Automatically matches text color */
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
+        opacity: 0.7;
+        transition:
+          transform 0.2s ease,
+          opacity 0.2s;
       }
       .nav-links a:hover {
         color: var(--text-bright);
         background: rgba(56, 189, 248, 0.1);
       }
+      .nav-links a.active svg,
+      .nav-links a:hover svg {
+        opacity: 1;
+        transform: scale(1.05); /* Slight pop effect on hover */
+      }
       .nav-links a.active {
         color: var(--text-bright);
-        background: var(--accent-blue);
-        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+        background: linear-gradient(
+          90deg,
+          rgba(41, 98, 255, 0.15) 0%,
+          rgba(41, 98, 255, 0) 100%
+        );
+        box-shadow: inset 3px 0 0 var(--accent-blue); /* Left edge highlight */
+        border-radius: 0 6px 6px 0;
       }
 
       /* Main Content Area */
@@ -108,7 +142,7 @@
         flex: 1;
         overflow-y: auto;
         padding: 32px;
-        padding-bottom: calc(32px + var(--ticker-height));
+        padding-bottom: calc(70px + var(--ticker-height));
         scroll-behavior: smooth;
         position: relative;
       }
@@ -135,30 +169,120 @@
         background: var(--panel-bg);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
-        padding: 16px 24px;
+        padding: 18px 24px;
         border-radius: 12px;
         border: 1px solid var(--panel-border);
         display: flex;
         gap: 20px;
         align-items: center;
-        margin-bottom: 32px;
-        flex-wrap: wrap;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
         position: sticky;
         top: 0;
         z-index: 50;
       }
-      select,
-      input[type="file"] {
-        background: rgba(0, 0, 0, 0.3);
+
+      /* Custom File Upload Styling */
+      .file-upload-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .file-upload-wrapper input[type="file"] {
+        display: none; /* Hide the ugly default browser button */
+      }
+      .custom-file-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px dashed rgba(255, 255, 255, 0.15);
+        color: var(--text-bright);
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 0.85em;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .custom-file-btn:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+      .file-name {
+        font-size: 0.8em;
+        color: var(--text-muted);
+        max-width: 120px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* Refined Select Dropdowns */
+      .modern-select {
+        appearance: none;
+        -webkit-appearance: none;
+        background: rgba(0, 0, 0, 0.2)
+          url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2214%22%20height%3D%2214%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23787b86%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")
+          no-repeat right 12px center;
+        background-size: 12px;
         color: var(--text-bright);
         border: 1px solid var(--panel-border);
-        padding: 10px 14px;
+        padding: 8px 32px 8px 16px;
         border-radius: 6px;
         font-family: "Inter", sans-serif;
-        font-size: 0.9em;
-        outline: none;
+        font-size: 0.85em;
+        font-weight: 500;
+        cursor: pointer;
+        min-width: 140px;
         transition: border-color 0.2s;
+      }
+      .modern-select:hover,
+      .modern-select:focus {
+        border-color: var(--accent-blue);
+        outline: none;
+      }
+
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .control-label {
+        font-size: 0.8em;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .sync-label-stack {
+        font-size: 0.75em;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+      }
+      @keyframes spin {
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      /* New Breathing Animation for Loading States */
+      @keyframes pulse-text {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+      .loading-pulse {
+        animation: pulse-text 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
       }
       select:focus {
         border-color: var(--accent-blue);
@@ -203,11 +327,33 @@
         background: rgba(22, 32, 44, 0.4);
         border-radius: 12px;
         border: 1px solid var(--panel-border);
-        padding: 24px;
+        padding: 20px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         display: flex;
         flex-direction: column;
         gap: 8px;
+        position: relative; /* Allows absolute positioning inside */
+        overflow: hidden; /* Keeps the oversized icons from bleeding out */
+      }
+      /* Keeps the text cleanly on top of the icon */
+      .kpi-card > span {
+        position: relative;
+        z-index: 2;
+      }
+      /* The Watermark Icon Styling */
+      .kpi-bg-icon {
+        position: absolute;
+        right: -15%;
+        bottom: -25%;
+        width: 140px;
+        height: 140px;
+        stroke: var(--text-muted);
+        stroke-width: 1;
+        fill: none;
+        opacity: 0.18; /* Super faint texture */
+        z-index: 0;
+        transform: rotate(-10deg);
+        pointer-events: none; /* Ensures you can still select the text */
       }
       .kpi-label {
         font-size: 0.85em;
@@ -217,8 +363,8 @@
         letter-spacing: 0.5px;
       }
       .kpi-val {
-        font-size: 2em;
-        font-weight: 700;
+        font-size: 1.6em;
+        font-weight: 600;
         color: var(--text-bright);
       }
 
@@ -233,7 +379,7 @@
       }
       .grid-2-col {
         display: grid;
-        grid-template-columns: 2fr 1fr;
+        grid-template-columns: 1fr 1fr;
         gap: 24px;
         margin-bottom: 32px;
       }
@@ -362,13 +508,18 @@
       table.dataTable.display tbody tr:hover {
         background-color: rgba(255, 255, 255, 0.02);
       }
+      table.dataTable.display tbody tr td {
+        padding: 10px 14px; /* Tighter row height */
+        font-size: 0.85em; /* Smaller table font */
+      }
       table.dataTable thead th {
-        border-bottom: 2px solid var(--panel-border);
+        border-bottom: 1px solid var(--panel-border);
         color: var(--text-muted);
         text-transform: uppercase;
-        font-size: 0.8em;
+        font-size: 0.75em;
+        font-weight: 600;
         letter-spacing: 0.5px;
-        padding-bottom: 12px;
+        padding-bottom: 8px;
       }
       table.dataTable.no-footer {
         border-bottom: none;
@@ -376,95 +527,326 @@
       .text-muted {
         color: var(--text-muted);
       }
+      /* Meta Footer & Pivot Table */
+      .meta-footer {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 32px;
+        background: rgba(0, 0, 0, 0.5);
+        border-top: 1px solid var(--panel-border);
+        font-size: 0.85em;
+        color: var(--text-muted);
+        position: fixed;
+        bottom: var(--ticker-height);
+        left: var(--sidebar-width);
+        right: 0;
+        z-index: 150;
+      }
+      .pivot-table {
+        width: 100%;
+        border-collapse: collapse;
+        color: var(--text-bright);
+      }
+      .pivot-header {
+        background: rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        border-bottom: 1px solid var(--panel-border);
+        transition: background 0.2s;
+      }
+      .pivot-header:hover {
+        background: rgba(56, 189, 248, 0.05);
+      }
+      .pivot-header td {
+        padding: 14px;
+        font-weight: 600;
+      }
+      .pivot-child-row {
+        background: transparent;
+        display: none;
+      }
+      .pivot-child-row td {
+        padding: 10px 14px 10px 44px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+        font-size: 0.9em;
+      }
+      .pivot-child-row.open {
+        display: table-row;
+      }
+      .toggle-icon {
+        display: inline-block;
+        width: 24px;
+        font-weight: bold;
+        color: var(--accent-blue);
+      }
     </style>
   </head>
   <body>
     <aside class="sidebar">
-      <div class="sidebar-logo">Portfolio Analytics</div>
+      <div class="sidebar-logo">
+        <svg
+          width="46"
+          height="46"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          style="margin-bottom: 16px"
+        >
+          <path
+            d="M12 2L2 7l10 5 10-5-10-5z"
+            fill="var(--accent-blue)"
+            fill-opacity="0.15"
+            stroke="var(--accent-blue)"
+            stroke-width="1.5"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M2 12l10 5 10-5"
+            stroke="var(--accent-blue)"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M2 17l10 5 10-5"
+            stroke="var(--accent-blue)"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        Portfolio<br /><span class="logo-accent">Analytics</span>
+      </div>
       <nav class="nav-links">
-        <a class="tab-link active" onclick="switchTab('dashboardTab')"
-          >Dashboard</a
-        >
-        <a class="tab-link" onclick="switchTab('transactionsTab')"
-          >Transactions Ledger</a
-        >
-        <a class="tab-link" onclick="switchTab('reportsTab')"
-          >Grouping Reports</a
-        >
-        <a class="tab-link" onclick="switchTab('hedgeTab')">Risk & Hedging</a>
+        <a class="tab-link active" onclick="switchTab('dashboardTab')">
+          <svg viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          Dashboard
+        </a>
+        <a class="tab-link" onclick="switchTab('transactionsTab')">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"
+            ></path>
+          </svg>
+          Transactions Ledger
+        </a>
+        <a class="tab-link" onclick="switchTab('reportsTab')">
+          <svg viewBox="0 0 24 24">
+            <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+            <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+          </svg>
+          Grouping Reports
+        </a>
+        <a class="tab-link" onclick="switchTab('hedgeTab')">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          Risk & Hedging
+        </a>
+        <a class="tab-link" onclick="switchTab('screenerTab')">
+          <svg viewBox="0 0 24 24">
+            <polygon
+              points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"
+            ></polygon>
+          </svg>
+          Fundamental Screener
+        </a>
+        <a class="tab-link" onclick="switchTab('rollingTab')">
+          <svg viewBox="0 0 24 24">
+            <path d="M21 12A9 9 0 0 0 6 5.3L3 8"></path>
+            <path d="M3 3v5h5"></path>
+            <path d="M3 12a9 9 0 0 0 15 6.7l3-2.7"></path>
+            <path d="M21 21v-5h-5"></path>
+          </svg>
+          Rolling Returns
+        </a>
       </nav>
     </aside>
 
     <main class="main-wrapper">
-      <div class="master-controls">
-        <div class="control-group">
-          <span class="control-label">Data</span>
-          <input
-            type="file"
-            id="txFile"
-            accept=".csv"
-            title="Transactions CSV"
-          />
-          <input type="file" id="pxFile" accept=".csv" title="Prices CSV" />
+      <div
+        style="display: flex; gap: 24px; margin-bottom: 32px; flex-wrap: wrap"
+      >
+        <div class="master-controls" style="margin-bottom: 0; flex: 1.2">
+          <div class="sync-label-stack">
+            <span>Database</span>
+            <span style="color: var(--text-bright)">Sync</span>
+          </div>
+
+          <div
+            style="
+              width: 1px;
+              height: 32px;
+              background: var(--panel-border);
+              margin: 0 4px;
+            "
+          ></div>
+
+          <div class="file-upload-wrapper">
+            <label for="txFile" class="custom-file-btn">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              Transactions CSV
+            </label>
+            <input
+              type="file"
+              id="txFile"
+              accept=".csv"
+              onchange="
+                document.getElementById('txFileName').textContent = this
+                  .files[0]
+                  ? this.files[0].name
+                  : ''
+              "
+            />
+            <span id="txFileName" class="file-name mono"></span>
+          </div>
+
+          <div class="file-upload-wrapper">
+            <label for="pxFile" class="custom-file-btn">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              Prices CSV
+            </label>
+            <input
+              type="file"
+              id="pxFile"
+              accept=".csv"
+              onchange="
+                document.getElementById('pxFileName').textContent = this
+                  .files[0]
+                  ? this.files[0].name
+                  : ''
+              "
+            />
+            <span id="pxFileName" class="file-name mono"></span>
+          </div>
+
+          <button
+            id="syncDbBtn"
+            class="btn-primary"
+            style="margin-left: auto; padding: 8px 20px; font-size: 0.9em"
+          >
+            Sync Data
+          </button>
         </div>
-        <div
-          style="
-            width: 1px;
-            height: 30px;
-            background: var(--panel-border);
-            margin: 0 10px;
-          "
-        ></div>
-        <div class="control-group">
-          <span class="control-label">Folio</span>
-          <select id="f_folio">
-            <option value="All">All Entities</option>
-          </select>
+
+        <div class="master-controls" style="margin-bottom: 0; flex: 1">
+          <div class="control-group">
+            <span class="control-label">Folio</span>
+            <select id="f_folio" class="modern-select">
+              <option value="All">All Entities</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <span class="control-label">Investor</span>
+            <select id="f_investor" class="modern-select">
+              <option value="All">All Investors</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <span class="control-label">Broker</span>
+            <select id="f_demat" class="modern-select">
+              <option value="All">All Demats</option>
+            </select>
+          </div>
+          <span
+            id="loadingTxt"
+            style="
+              margin-left: auto;
+              display: none;
+              color: var(--text-muted);
+              font-size: 0.85em;
+            "
+          >
+            <svg
+              style="
+                animation: spin 1s linear infinite;
+                width: 14px;
+                height: 14px;
+                margin-right: 4px;
+                vertical-align: middle;
+              "
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="12" y1="2" x2="12" y2="6"></line>
+              <line x1="12" y1="18" x2="12" y2="22"></line>
+              <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+              <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+              <line x1="2" y1="12" x2="6" y2="12"></line>
+              <line x1="18" y1="12" x2="22" y2="12"></line>
+              <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+              <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+            </svg>
+            Refreshing...
+          </span>
         </div>
-        <div class="control-group">
-          <span class="control-label">Investor</span>
-          <select id="f_investor">
-            <option value="All">All Investors</option>
-          </select>
-        </div>
-        <div class="control-group">
-          <span class="control-label">Broker</span>
-          <select id="f_demat">
-            <option value="All">All Demats</option>
-          </select>
-        </div>
-        <button id="analyzeBtn" class="btn-primary" style="margin-left: auto">
-          Run Analytics
-        </button>
-        <span
-          id="loadingTxt"
-          style="
-            display: none;
-            color: var(--pos-green);
-            font-weight: bold;
-            font-size: 0.9em;
-          "
-          >Calculating...</span
-        >
       </div>
 
       <div id="dashboardTab" class="tab-content active">
         <div class="kpi-grid">
           <div class="kpi-card">
-            <span class="kpi-label">Current Value</span
-            ><span id="c_val" class="kpi-val mono">–</span>
+            <svg class="kpi-bg-icon" viewBox="0 0 24 24">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+            <span class="kpi-label">Current Value</span>
+            <span id="c_val" class="kpi-val mono">–</span>
           </div>
+
           <div class="kpi-card">
-            <span class="kpi-label">Net Invested</span
-            ><span id="i_val" class="kpi-val mono">–</span>
+            <svg class="kpi-bg-icon" viewBox="0 0 24 24">
+              <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+            </svg>
+            <span class="kpi-label">Net Invested</span>
+            <span id="i_val" class="kpi-val mono">–</span>
           </div>
+
           <div class="kpi-card">
-            <span class="kpi-label">Absolute Gain</span
-            ><span id="g_val" class="kpi-val mono">–</span>
+            <svg class="kpi-bg-icon" viewBox="0 0 24 24">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+              <polyline points="17 6 23 6 23 12"></polyline>
+            </svg>
+            <span class="kpi-label">Absolute Gain</span>
+            <span id="g_val" class="kpi-val mono">–</span>
           </div>
+
           <div class="kpi-card">
-            <span class="kpi-label">Time-Weighted XIRR</span
-            ><span
+            <svg class="kpi-bg-icon" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span class="kpi-label">Time-Weighted XIRR</span>
+            <span
               id="x_val"
               class="kpi-val mono"
               style="color: var(--accent-blue)"
@@ -473,10 +855,17 @@
           </div>
         </div>
 
+        <div class="panel">
+          <h2>Portfolio Trajectory vs Benchmark</h2>
+          <div id="chart" class="chart-container"></div>
+        </div>
+
         <div class="grid-2-col">
           <div class="panel" style="margin-bottom: 0">
-            <h2>Portfolio Trajectory vs Benchmark</h2>
-            <div id="chart" class="chart-container"></div>
+            <h2>Today's Gain/Loss by Folio</h2>
+            <table class="pivot-table" id="todaysGainTable">
+              <tbody></tbody>
+            </table>
           </div>
           <div class="panel" style="margin-bottom: 0">
             <h2>Holdings Heatmap</h2>
@@ -496,10 +885,12 @@
                 <th>Ticker</th>
                 <th>30D Trend</th>
                 <th>Shares</th>
+                <th>Average Cost</th>
                 <th>LTP</th>
                 <th>Invested</th>
                 <th>Current Value</th>
-                <th>Gain</th>
+                <th>Unrealised Gain</th>
+                <th>Realised Gain</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -591,6 +982,16 @@
             </thead>
             <tbody></tbody>
           </table>
+        </div>
+        <div class="panel">
+          <h2>Stock Allocation by Demat</h2>
+          <div style="overflow-x: auto">
+            <table
+              id="repStockDematTable"
+              class="display nowrap"
+              style="width: 100%; color: var(--text-bright)"
+            ></table>
+          </div>
         </div>
       </div>
       <div id="hedgeTab" class="tab-content">
@@ -811,7 +1212,173 @@
           </div>
         </div>
       </div>
+      <div id="screenerTab" class="tab-content">
+        <div class="panel">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 24px;
+            "
+          >
+            <div>
+              <h2>Business Quality Screener</h2>
+              <p style="color: var(--text-muted); font-size: 0.9em; margin: 0">
+                Scores holdings out of 10 based on ROE, Leverage, Margins, and
+                Growth.
+              </p>
+            </div>
+            <button id="runScreenerBtn" class="btn-primary">
+              Run Fundamental Scan
+            </button>
+          </div>
+
+          <div id="screenerLoading" style="display: none; margin-bottom: 24px">
+            <div
+              class="loading-pulse"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: var(--accent-blue);
+                font-weight: 600;
+                font-size: 0.95em;
+              "
+            >
+              <svg
+                style="
+                  animation: spin 1s linear infinite;
+                  width: 18px;
+                  height: 18px;
+                "
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="12" y1="2" x2="12" y2="6"></line>
+                <line x1="12" y1="18" x2="12" y2="22"></line>
+                <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                <line x1="2" y1="12" x2="6" y2="12"></line>
+                <line x1="18" y1="12" x2="22" y2="12"></line>
+                <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+              </svg>
+              <span>
+                Fetching live fundamentals from Yahoo Finance
+                <span style="color: var(--text-muted); font-weight: 500"
+                  >(This may take 30-60 seconds)...</span
+                >
+              </span>
+            </div>
+          </div>
+
+          <table
+            id="screenerTable"
+            class="display"
+            style="width: 100%; color: var(--text-bright)"
+          >
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Quality Score</th>
+                <th>ROE (%)</th>
+                <th>P/E Ratio</th>
+                <th>EPS (₹)</th>
+                <th>Debt/Equity</th>
+                <th>Op Margin (%)</th>
+                <th>Rev Growth (%)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="rollingTab" class="tab-content">
+        <div class="panel">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              margin-bottom: 24px;
+            "
+          >
+            <div>
+              <h2>Rolling CAGR vs Benchmark</h2>
+              <p
+                style="
+                  color: var(--text-muted);
+                  font-size: 0.9em;
+                  margin: 0;
+                  max-width: 90%;
+                "
+              >
+                This chart removes timing luck by calculating your annualized
+                return on every single day in history. It uses a Time-Weighted
+                NAV to ignore the distortion of cash deposits.
+              </p>
+            </div>
+            <select
+              id="rollingWindowSelect"
+              style="
+                min-width: 160px;
+                font-weight: bold;
+                background: var(--panel-bg);
+              "
+            >
+              <option value="2Y">2-Year Rolling</option>
+              <option value="3Y" selected>3-Year Rolling</option>
+              <option value="5Y">5-Year Rolling</option>
+            </select>
+          </div>
+
+          <div
+            id="rollingWarning"
+            style="
+              display: none;
+              background: rgba(239, 68, 68, 0.1);
+              color: var(--neg-red);
+              padding: 16px;
+              border-radius: 8px;
+              border: 1px solid rgba(239, 68, 68, 0.3);
+              margin-bottom: 20px;
+            "
+          >
+            <b>Insufficient Data:</b> You need more portfolio history to
+            generate a Rolling Return chart for this timeframe.
+          </div>
+
+          <div
+            id="rollingChart"
+            class="chart-container"
+            style="height: 500px"
+          ></div>
+        </div>
+      </div>
     </main>
+
+    <div class="meta-footer">
+      <span
+        >Last Transaction: <b id="lbl_tx" class="mono text-bright">–</b></span
+      >
+      <span
+        >Price Data Up To: <b id="lbl_px" class="mono text-bright">–</b></span
+      >
+      <span
+        >Last Live Price At:
+        <b
+          id="lbl_live"
+          class="mono text-bright"
+          style="color: var(--accent-blue)"
+          >–</b
+        ></span
+      >
+    </div>
 
     <div class="ticker-wrap">
       <div class="ticker-move" id="ticker-content"></div>
@@ -827,7 +1394,54 @@
       });
       let isFirstLoad = true;
 
-      // Tab Switcher with DataTables Auto-Adjust
+      // Auto-load dashboard on boot
+      document.addEventListener("DOMContentLoaded", () => {
+        runAnalysis();
+      });
+
+      // Handle Database Sync
+      document
+        .getElementById("syncDbBtn")
+        .addEventListener("click", async function () {
+          const txFile = document.getElementById("txFile").files[0];
+          const pxFile = document.getElementById("pxFile").files[0];
+
+          if (!txFile && !pxFile) {
+            alert("Please select at least one CSV file to sync.");
+            return;
+          }
+
+          const btn = this;
+          btn.innerText = "Syncing...";
+          const formData = new FormData();
+          if (txFile) formData.append("transactions", txFile);
+          if (pxFile) formData.append("prices", pxFile);
+
+          try {
+            const response = await fetch("/api/upload", {
+              method: "POST",
+              body: formData,
+            });
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+
+            alert("Database successfully updated!");
+            // Clear inputs
+            document.getElementById("txFile").value = "";
+            document.getElementById("pxFile").value = "";
+            document.getElementById("txFileName").textContent = "";
+            document.getElementById("pxFileName").textContent = "";
+
+            // Refresh the dashboard immediately
+            runAnalysis();
+          } catch (err) {
+            alert("Sync Error: " + err.message);
+          } finally {
+            btn.innerText = "Sync to Database";
+          }
+        });
+
+      // Standard Dashboard Logic
       function switchTab(tabId) {
         document
           .querySelectorAll(".tab-content")
@@ -835,33 +1449,39 @@
         document
           .querySelectorAll(".tab-link")
           .forEach((l) => l.classList.remove("active"));
+
         document.getElementById(tabId).classList.add("active");
         event.target.classList.add("active");
 
         // Forces DataTables to recalculate widths when a hidden tab is opened
         $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+        // Forces Plotly charts to expand to full width when a hidden tab is opened
+        window.dispatchEvent(new Event("resize"));
       }
+
+      // Global function to toggle Pivot Table rows
+      window.togglePivot = function (folioClass) {
+        const rows = document.querySelectorAll("." + folioClass);
+        const icon = document.getElementById("icon_" + folioClass);
+        let isOpen = false;
+
+        rows.forEach((row) => {
+          row.classList.toggle("open");
+          if (row.classList.contains("open")) isOpen = true;
+        });
+
+        icon.innerText = isOpen ? "−" : "+";
+      };
 
       ["f_folio", "f_investor", "f_demat"].forEach((id) => {
         document.getElementById(id).addEventListener("change", runAnalysis);
       });
-
-      document
-        .getElementById("analyzeBtn")
-        .addEventListener("click", runAnalysis);
+      // (Remove the old analyzeBtn event listener entirely, as it no longer exists)
 
       async function runAnalysis() {
-        const txFile = document.getElementById("txFile").files[0];
-        const pxFile = document.getElementById("pxFile").files[0];
-        if (!txFile || !pxFile) {
-          alert("Please upload both CSV files.");
-          return;
-        }
-
         document.getElementById("loadingTxt").style.display = "inline-block";
         const formData = new FormData();
-        formData.append("transactions", txFile);
-        formData.append("prices", pxFile);
+        // We only send filters now, no files!
         formData.append("folio", document.getElementById("f_folio").value);
         formData.append(
           "investor",
@@ -875,8 +1495,11 @@
             body: formData,
           });
           const data = await response.json();
+
           if (data.error) {
-            alert(data.error);
+            // Gracefully handle an empty database
+            console.warn(data.error);
+            document.getElementById("loadingTxt").style.display = "none";
             return;
           }
 
@@ -901,6 +1524,8 @@
           // Store globally for the Hedge Simulator
           window.currentPortfolioValue = data.summary.CurrentValue;
           window.currentPortfolioBeta = data.summary.Beta;
+          // Store globally for the Screener
+          window.currentTickers = data.holdings.map((h) => h.ScripName);
 
           // Update Hedge KPIs
           document.getElementById("h_beta").innerText =
@@ -911,6 +1536,45 @@
 
           // Auto-run the hedge simulation on load
           simulateHedge();
+
+          // Populate Footer Meta Data
+          document.getElementById("lbl_tx").innerText = data.meta.last_tx_date;
+          document.getElementById("lbl_px").innerText = data.meta.last_px_date;
+          document.getElementById("lbl_live").innerText =
+            data.meta.last_live_time;
+
+          // Render Today's Gain Pivot Table
+          const tbody = document.querySelector("#todaysGainTable tbody");
+          let pivotHtml = "";
+          data.todays_gain.forEach((folio, idx) => {
+            const gainColor =
+              folio.TotalTodayGain >= 0 ? "var(--pos-green)" : "var(--neg-red)";
+            const sign = folio.TotalTodayGain >= 0 ? "+" : "";
+
+            // Master Folio Row
+            pivotHtml += `
+                <tr class="pivot-header" onclick="togglePivot('folio_${idx}')">
+                  <td><span class="toggle-icon" id="icon_folio_${idx}">+</span> ${folio.Folio}</td>
+                  <td class="mono" style="text-align: right; color: ${gainColor}">
+                     ${sign}₹${formatINR.format(folio.TotalTodayGain)}
+                  </td>
+                </tr>`;
+
+            // Child Stock Rows
+            folio.Stocks.forEach((stock) => {
+              const sColor =
+                stock.TodayGain >= 0 ? "var(--pos-green)" : "var(--text-muted)"; // Mute the color if it's negative or zero for cleaner scanning
+              const sSign = stock.TodayGain >= 0 ? "+" : "";
+              pivotHtml += `
+                    <tr class="pivot-child-row folio_${idx}">
+                      <td><b>${stock.ScripName}</b> <span class="text-muted mono" style="margin-left: 8px;">(${stock.ShareNos} shares)</span></td>
+                      <td class="mono" style="text-align: right; color: ${sColor}">
+                         ${sSign}₹${formatINR.format(stock.TodayGain)}
+                      </td>
+                    </tr>`;
+            });
+          });
+          tbody.innerHTML = pivotHtml;
 
           // 2. Trajectory Chart (Added Net Invested Line)
           const chartLayout = {
@@ -954,14 +1618,88 @@
               },
             ],
             chartLayout,
+            { responsive: true },
+          );
+
+          // --- ROLLING RETURNS CHART ---
+          window.currentRollingData = data.chart.rolling;
+
+          // Attach Event Listener to Dropdown (Cleanly replacing old clones to prevent duplicates)
+          const rollSelect = document.getElementById("rollingWindowSelect");
+          const newRollSelect = rollSelect.cloneNode(true);
+          rollSelect.parentNode.replaceChild(newRollSelect, rollSelect);
+
+          newRollSelect.addEventListener("change", function () {
+            renderRollingChart(this.value);
+          });
+
+          // Chart Rendering Function
+          function renderRollingChart(windowKey) {
+            const rData = window.currentRollingData[windowKey];
+
+            if (rData && rData.dates && rData.dates.length > 0) {
+              document.getElementById("rollingWarning").style.display = "none";
+              document.getElementById("rollingChart").style.display = "block";
+
+              // Dark theme colors matching the main Trajectory Chart
+              const pFontColor = "#cbd5e1";
+              const pGridColor = "rgba(255, 255, 255, 0.05)";
+              const pPortLine = "#38bdf8";
+              const pNiftyLine = "#64748b";
+
+              const rollingLayout = {
+                paper_bgcolor: "rgba(0,0,0,0)",
+                plot_bgcolor: "rgba(0,0,0,0)",
+                font: { color: pFontColor, family: "Inter" },
+                hovermode: "x unified",
+                margin: { l: 50, r: 20, t: 20, b: 40 },
+                xaxis: { showgrid: true, gridcolor: pGridColor },
+                yaxis: {
+                  title: "Annualized Return (CAGR)",
+                  showgrid: true,
+                  gridcolor: pGridColor,
+                  ticksuffix: "%",
+                },
+              };
+
+              Plotly.newPlot(
+                "rollingChart",
+                [
+                  {
+                    x: rData.dates,
+                    y: rData.port,
+                    type: "scatter",
+                    name: `Portfolio ${windowKey} CAGR`,
+                    line: { color: pPortLine, width: 2 },
+                  },
+                  {
+                    x: rData.dates,
+                    y: rData.nifty,
+                    type: "scatter",
+                    name: `NIFTY 50 ${windowKey} CAGR`,
+                    line: { color: pNiftyLine, dash: "dot", width: 2 },
+                  },
+                ],
+                rollingLayout,
+                { responsive: true },
+              );
+            } else {
+              document.getElementById("rollingChart").style.display = "none";
+              document.getElementById("rollingWarning").style.display = "block";
+            }
+          }
+
+          // Initial Render using the currently selected dropdown value
+          renderRollingChart(
+            document.getElementById("rollingWindowSelect").value,
           );
 
           // 3. Holdings Heatmap (Treemap)
           const labels = data.holdings.map((h) => h.ScripName);
           const parents = data.holdings.map((h) => "Portfolio");
           const values = data.holdings.map((h) => h.CurrentValue);
-          const colors = data.holdings.map(
-            (h) => (h.Gain / h.NetInvested) * 100,
+          const colors = data.holdings.map((h) =>
+            h.NetInvested > 0 ? (h.UnrealizedGain / h.NetInvested) * 100 : 0,
           );
 
           Plotly.newPlot(
@@ -979,6 +1717,8 @@
                     [0.5, "#16202c"],
                     [1, "#22c55e"],
                   ],
+                  cmin: -100,
+                  cmax: 100,
                   cmid: 0,
                 },
                 texttemplate: "<b>%{label}</b><br>₹%{value:,.0f}",
@@ -991,6 +1731,7 @@
               font: { color: "#fff", family: "Inter" },
               margin: { l: 0, r: 0, t: 0, b: 0 },
             },
+            { responsive: true },
           );
 
           // 4. Update Ticker Tape (With Dynamic Speed)
@@ -998,10 +1739,11 @@
           data.holdings.forEach((h) => {
             const pct =
               h.NetInvested > 0
-                ? ((h.Gain / h.NetInvested) * 100).toFixed(2)
+                ? ((h.UnrealizedGain / h.NetInvested) * 100).toFixed(2)
                 : 0;
-            const color = h.Gain >= 0 ? "var(--pos-green)" : "var(--neg-red)";
-            const arrow = h.Gain >= 0 ? "▲" : "▼";
+            const color =
+              h.UnrealizedGain >= 0 ? "var(--pos-green)" : "var(--neg-red)";
+            const arrow = h.UnrealizedGain >= 0 ? "▲" : "▼";
             tickerHtml += `<div class="ticker-item"><span class="ticker-scrip">${h.ScripName}</span> <span class="mono" style="margin-left:4px;">₹${formatDec.format(h["Close Price"])}</span> <span style="color: ${color}; margin-left:8px;" class="mono">${arrow} ${Math.abs(pct)}%</span></div>`;
           });
 
@@ -1076,6 +1818,13 @@
               { data: "Trend", render: renderSparkline, orderable: false },
               { data: "TotalShares", render: renderINRMono },
               {
+                data: "AvgBuyPrice",
+                render: (data, type) =>
+                  type === "display"
+                    ? `<span class="mono">${formatDec.format(data)}</span>`
+                    : data,
+              },
+              {
                 data: "Close Price",
                 render: (data, type) =>
                   type === "display"
@@ -1084,9 +1833,10 @@
               },
               { data: "NetInvested", render: renderINRMono },
               { data: "CurrentValue", render: renderINRMono },
-              { data: "Gain", render: renderGain },
+              { data: "UnrealizedGain", render: renderGain },
+              { data: "RealizedGain", render: renderGain },
             ],
-            [[5, "desc"]],
+            [[7, "desc"]],
           );
 
           updateTable(
@@ -1142,6 +1892,54 @@
           updateTable("#repDematTable", data.reports.demat, reportCols, [
             [2, "desc"],
           ]);
+          // --- NEW: Dynamic Stock by Demat Matrix ---
+          const dematNames = data.reports.demat_names;
+          let dynamicCols = [
+            { data: "ScripName", title: "Ticker", render: renderBold },
+          ];
+
+          // Generate a pair of columns for every single Demat account found in the DB
+          dematNames.forEach((d) => {
+            dynamicCols.push({
+              data: `${d}_Shares`,
+              title: `${d}<br><span style="color:var(--text-muted); font-size: 0.85em;">Shares</span>`,
+              defaultContent: 0,
+              render: (val, type) => {
+                if (type === "display")
+                  return val
+                    ? `<span class="mono">${formatINR.format(val)}</span>`
+                    : '<span class="mono text-muted">-</span>';
+                return val;
+              },
+            });
+            dynamicCols.push({
+              data: `${d}_Avg`,
+              title: `${d}<br><span style="color:var(--text-muted); font-size: 0.85em;">Avg Cost</span>`,
+              defaultContent: 0,
+              render: (val, type) => {
+                if (type === "display")
+                  return val
+                    ? `<span class="mono">₹${formatDec.format(val)}</span>`
+                    : '<span class="mono text-muted">-</span>';
+                return val;
+              },
+            });
+          });
+
+          // Completely empty the table HTML before re-initializing so old dynamic headers are cleared
+          if ($.fn.dataTable.isDataTable("#repStockDematTable")) {
+            $("#repStockDematTable").DataTable().clear().destroy();
+            $("#repStockDematTable").empty();
+          }
+
+          $("#repStockDematTable").DataTable({
+            data: data.reports.stock_demat_matrix,
+            columns: dynamicCols,
+            order: [[0, "asc"]],
+            pageLength: 15,
+            scrollX: true, // Enables horizontal scrolling if you have many Demat accounts
+            autoWidth: false,
+          });
         } catch (err) {
           console.error(err);
         } finally {
@@ -1288,8 +2086,137 @@
             },
           ],
           payoffLayout,
+          { responsive: true },
         );
       }
+
+      // --- FUNDAMENTAL SCREENER LOGIC ---
+      document
+        .getElementById("runScreenerBtn")
+        .addEventListener("click", async function () {
+          if (!window.currentTickers || window.currentTickers.length === 0) {
+            alert("Please run the main portfolio analytics first.");
+            return;
+          }
+
+          document.getElementById("screenerLoading").style.display = "block";
+          this.disabled = true;
+
+          try {
+            // 1. Pre-filter obvious ETFs to save backend API time
+            const equityTickers = window.currentTickers.filter((t) => {
+              const name = t.toUpperCase();
+              return (
+                !name.includes("BEES") &&
+                !name.includes("ETF") &&
+                !name.includes("LIQUID") &&
+                !name.includes("SGB") // Catches Sovereign Gold Bonds
+              );
+            });
+
+            // 2. Send only the cleaned equity list to the backend
+            const response = await fetch("/api/fundamentals", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ tickers: equityTickers }),
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+
+            // Custom Formatter for the Quality Score Badge
+            const renderScore = (data, type) => {
+              if (type === "display") {
+                let color = "var(--neg-red)";
+                if (data >= 8) color = "var(--pos-green)";
+                else if (data >= 5) color = "#f59e0b"; // Amber warning
+
+                return `<span style="background: ${color}22; color: ${color}; padding: 4px 10px; border-radius: 6px; font-weight: bold; border: 1px solid ${color}55;">${data} / 10</span>`;
+              }
+              return data;
+            };
+
+            updateTable(
+              "#screenerTable",
+              data,
+              [
+                {
+                  data: "Ticker",
+                  render: (data, type) =>
+                    type === "display" ? `<b>${data}</b>` : data,
+                },
+                { data: "QualityScore", render: renderScore },
+                {
+                  data: "ROE",
+                  render: (data, type) => {
+                    if (type === "display")
+                      return data !== null
+                        ? `<span class="mono">${data.toFixed(2)}%</span>`
+                        : '<span class="mono text-muted">N/A</span>';
+                    return data;
+                  },
+                },
+                {
+                  data: "PE",
+                  render: (data, type) => {
+                    if (type === "display")
+                      return data !== null
+                        ? `<span class="mono">${data.toFixed(2)}x</span>`
+                        : '<span class="mono text-muted">N/A</span>';
+                    return data;
+                  },
+                },
+                {
+                  data: "EPS",
+                  render: (data, type) => {
+                    if (type === "display")
+                      return data !== null
+                        ? `<span class="mono">₹${data.toFixed(2)}</span>`
+                        : '<span class="mono text-muted">N/A</span>';
+                    return data;
+                  },
+                },
+                {
+                  data: "DebtToEquity",
+                  render: (data, type) => {
+                    if (type === "display")
+                      return data !== null
+                        ? `<span class="mono">${(data / 100).toFixed(2)}x</span>`
+                        : '<span class="mono text-muted">N/A</span>';
+                    return data;
+                  },
+                },
+                {
+                  data: "OpMargin",
+                  render: (data, type) => {
+                    if (type === "display")
+                      return data !== null
+                        ? `<span class="mono">${data.toFixed(2)}%</span>`
+                        : '<span class="mono text-muted">N/A</span>';
+                    return data;
+                  },
+                },
+                {
+                  data: "RevGrowth",
+                  render: (data, type) => {
+                    if (type === "display")
+                      return data !== null
+                        ? `<span class="mono">${data.toFixed(2)}%</span>`
+                        : '<span class="mono text-muted">N/A</span>';
+                    return data;
+                  },
+                },
+              ],
+              [[1, "desc"]],
+            ); // Sort by Quality Score descending
+          } catch (err) {
+            console.error(err);
+            alert("Failed to fetch fundamentals.");
+          } finally {
+            document.getElementById("screenerLoading").style.display = "none";
+            document.getElementById("runScreenerBtn").disabled = false;
+          }
+        });
     </script>
   </body>
 </html>

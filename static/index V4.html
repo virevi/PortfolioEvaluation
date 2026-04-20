@@ -1,0 +1,3073 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Portfolio Terminal V3</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.plot.ly/plotly-2.31.1.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css"
+    />
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+
+    <style>
+      /* Premium Terminal Color Palette */
+      :root {
+        --bg-dark: #0a0e17; /* Deeper, richer midnight blue/black */
+        --panel-bg: #131b26; /* Solid, flat panel color instead of glassmorphism */
+        --panel-border: rgba(255, 255, 255, 0.05);
+        --text-main: #b2b5be;
+        --text-muted: #787b86;
+        --text-bright: #d1d4dc;
+        --accent-blue: #2962ff; /* Professional institutional blue */
+        --accent-blue-hover: #1e4bd8;
+        --pos-green: #089981; /* TradingView Matte Green */
+        --neg-red: #f23645; /* TradingView Matte Red */
+        --sidebar-width: 240px;
+        --ticker-height: 40px;
+      }
+
+      body {
+        background: var(--bg-dark);
+        color: var(--text-main);
+        font-family: "Inter", sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+      }
+      /* --- LIGHT MODE OVERRIDES --- */
+      body[data-theme="light"] {
+        --bg-dark: #f3f4f6;
+        --panel-bg: #ffffff;
+        --panel-border: #e5e7eb;
+        --text-main: #4b5563;
+        --text-muted: #6b7280;
+        --text-bright: #111827;
+      }
+      body[data-theme="light"] .kpi-card,
+      body[data-theme="light"] .panel,
+      body[data-theme="light"] .master-controls {
+        background: #ffffff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      }
+      body[data-theme="light"] .sidebar,
+      body[data-theme="light"] .ticker-wrap,
+      body[data-theme="light"] .meta-footer {
+        background: #ffffff;
+      }
+      body[data-theme="light"] .dataTables_wrapper input[type="search"],
+      body[data-theme="light"] .dataTables_wrapper select {
+        background: #f9fafb;
+        color: var(--text-bright) !important;
+      }
+      body[data-theme="light"] table.dataTable.display tbody tr:hover {
+        background-color: #f9fafb;
+      }
+      body[data-theme="light"] .pivot-header {
+        background: #f9fafb;
+      }
+      body[data-theme="light"] .custom-file-btn {
+        background: #ffffff;
+        border-color: #d1d5db;
+        color: var(--text-bright);
+      }
+      body[data-theme="light"] .custom-file-btn:hover {
+        background: #f3f4f6;
+        border-color: var(--accent-blue);
+      }
+
+      /* --- ICON BUTTON STYLING --- */
+      .theme-toggle-btn {
+        background: transparent;
+        border: 1px solid var(--panel-border);
+        color: var(--text-muted);
+        border-radius: 50%;
+        width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-left: auto; /* Pushes it to the far right */
+      }
+      .theme-toggle-btn:hover {
+        background: rgba(120, 123, 134, 0.1);
+        color: var(--text-bright);
+      }
+      h1,
+      h2 {
+        color: var(--text-bright);
+        font-weight: 700;
+        margin-top: 0;
+      }
+
+      /* Typography Utilities */
+      .mono {
+        font-family: "Fira Code", monospace;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.5px;
+      }
+
+      /* Glassmorphism Sidebar */
+      .sidebar {
+        width: var(--sidebar-width);
+        background: var(--panel-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-right: 1px solid var(--panel-border);
+        display: flex;
+        flex-direction: column;
+        padding: 24px 0;
+        z-index: 100;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+      }
+      .sidebar-logo {
+        font-size: 1.4em;
+        font-weight: 900;
+        letter-spacing: 1px;
+        color: var(--accent-blue);
+        padding: 0 24px 32px 24px;
+        border-bottom: 1px solid var(--panel-border);
+        margin-bottom: 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Centers the logo and text horizontally */
+        text-align: center; /* Ensures the text itself is centered */
+        line-height: 1.2;
+      }
+      .logo-accent {
+        color: var(--text-bright); /* Adds a premium two-tone text effect */
+      }
+      .nav-links {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 0 16px;
+      }
+      .nav-links a {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-weight: 600;
+        padding: 12px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex; /* Aligns icon and text */
+        align-items: center;
+        gap: 12px; /* Spacing between icon and text */
+      }
+      .nav-links a svg {
+        width: 18px;
+        height: 18px;
+        stroke: currentColor; /* Automatically matches text color */
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
+        opacity: 0.7;
+        transition:
+          transform 0.2s ease,
+          opacity 0.2s;
+      }
+      .nav-links a:hover {
+        color: var(--text-bright);
+        background: rgba(56, 189, 248, 0.1);
+      }
+      .nav-links a.active svg,
+      .nav-links a:hover svg {
+        opacity: 1;
+        transform: scale(1.05); /* Slight pop effect on hover */
+      }
+      .nav-links a.active {
+        color: var(--text-bright);
+        background: linear-gradient(
+          90deg,
+          rgba(41, 98, 255, 0.15) 0%,
+          rgba(41, 98, 255, 0) 100%
+        );
+        box-shadow: inset 3px 0 0 var(--accent-blue); /* Left edge highlight */
+        border-radius: 0 6px 6px 0;
+      }
+
+      /* Main Content Area */
+      .main-wrapper {
+        flex: 1;
+        overflow-y: auto;
+        padding: 32px;
+        padding-bottom: calc(70px + var(--ticker-height));
+        scroll-behavior: smooth;
+        position: relative;
+      }
+      .tab-content {
+        display: none;
+        animation: fadeIn 0.3s ease;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(5px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Glassmorphism Master Controls (Sticky Top) */
+      .master-controls {
+        background: var(--panel-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        padding: 18px 24px;
+        border-radius: 12px;
+        border: 1px solid var(--panel-border);
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+
+      /* Custom File Upload Styling */
+      .file-upload-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .file-upload-wrapper input[type="file"] {
+        display: none; /* Hide the ugly default browser button */
+      }
+      .custom-file-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px dashed rgba(255, 255, 255, 0.15);
+        color: var(--text-bright);
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 0.85em;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .custom-file-btn:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+      .file-name {
+        font-size: 0.8em;
+        color: var(--text-muted);
+        max-width: 120px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* Refined Select Dropdowns */
+      .modern-select {
+        appearance: none;
+        -webkit-appearance: none;
+        background: rgba(0, 0, 0, 0.2)
+          url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2214%22%20height%3D%2214%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23787b86%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")
+          no-repeat right 12px center;
+        background-size: 12px;
+        color: var(--text-bright);
+        border: 1px solid var(--panel-border);
+        padding: 8px 32px 8px 16px;
+        border-radius: 6px;
+        font-family: "Inter", sans-serif;
+        font-size: 0.85em;
+        font-weight: 500;
+        cursor: pointer;
+        min-width: 140px;
+        transition: border-color 0.2s;
+      }
+      .modern-select:hover,
+      .modern-select:focus {
+        border-color: var(--accent-blue);
+        outline: none;
+      }
+
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .control-label {
+        font-size: 0.8em;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .sync-label-stack {
+        font-size: 0.75em;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        display: flex;
+        flex-direction: column;
+        line-height: 1.2;
+      }
+      @keyframes spin {
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      /* New Breathing Animation for Loading States */
+      @keyframes pulse-text {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+      .loading-pulse {
+        animation: pulse-text 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      select:focus {
+        border-color: var(--accent-blue);
+      }
+      .control-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .control-label {
+        font-size: 0.85em;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .btn-primary {
+        background: var(--accent-blue);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+      }
+      .btn-primary:hover {
+        background: var(--accent-blue-hover);
+        transform: translateY(-1px);
+      }
+
+      /* KPI Cards */
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+      .kpi-card {
+        background: rgba(22, 32, 44, 0.4);
+        border-radius: 12px;
+        border: 1px solid var(--panel-border);
+        padding: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        position: relative; /* Allows absolute positioning inside */
+        overflow: hidden; /* Keeps the oversized icons from bleeding out */
+      }
+      /* Keeps the text cleanly on top of the icon */
+      .kpi-card > span {
+        position: relative;
+        z-index: 2;
+      }
+      /* The Watermark Icon Styling */
+      .kpi-bg-icon {
+        position: absolute;
+        right: -15%;
+        bottom: -25%;
+        width: 140px;
+        height: 140px;
+        stroke: var(--text-muted);
+        stroke-width: 1;
+        fill: none;
+        opacity: 0.18; /* Super faint texture */
+        z-index: 0;
+        transform: rotate(-10deg);
+        pointer-events: none; /* Ensures you can still select the text */
+      }
+      .kpi-label {
+        font-size: 0.85em;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .kpi-val {
+        font-size: 1.6em;
+        font-weight: 600;
+        color: var(--text-bright);
+      }
+
+      /* Chart & Table Panels */
+      .panel {
+        background: rgba(22, 32, 44, 0.4);
+        border-radius: 12px;
+        border: 1px solid var(--panel-border);
+        padding: 24px;
+        margin-bottom: 32px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+      .grid-2-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+      @media (max-width: 1200px) {
+        .grid-2-col {
+          grid-template-columns: 1fr;
+        }
+      }
+      .chart-container {
+        height: 450px;
+        width: 100%;
+      }
+
+      /* Transaction Pills */
+      .pill {
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        font-weight: 700;
+        display: inline-block;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .pill-buy {
+        background: rgba(34, 197, 94, 0.15);
+        color: var(--pos-green);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+      }
+      .pill-sell {
+        background: rgba(239, 68, 68, 0.15);
+        color: var(--neg-red);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      }
+
+      /* Heads-Up Ticker Tape */
+      .ticker-wrap {
+        width: calc(100% - var(--sidebar-width));
+        height: var(--ticker-height);
+        background: var(--bg-dark);
+        border-top: 1px solid var(--panel-border);
+        position: fixed;
+        bottom: 0;
+        left: var(--sidebar-width);
+        z-index: 200;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+      }
+      .ticker-move {
+        display: flex;
+        white-space: nowrap;
+        animation-name: ticker;
+        animation-timing-function: linear;
+        animation-iteration-count: infinite;
+        padding-left: 100%;
+      }
+      .ticker-move:hover {
+        animation-play-state: paused;
+      }
+      .ticker-item {
+        margin-right: 48px;
+        font-size: 0.9em;
+        font-weight: 600;
+        color: var(--text-muted);
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .ticker-scrip {
+        color: var(--text-bright);
+      }
+      @keyframes ticker {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-100%);
+        }
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg-dark);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-muted);
+      }
+
+      /* DataTables Overrides */
+      .dataTables_wrapper,
+      .dataTables_info,
+      .dataTables_length label,
+      .dataTables_filter label {
+        color: var(--text-muted) !important;
+        font-size: 0.9em;
+      }
+      .dataTables_wrapper input[type="search"],
+      .dataTables_wrapper select {
+        background: rgba(0, 0, 0, 0.3);
+        color: var(--text-bright) !important;
+        border: 1px solid var(--panel-border);
+        border-radius: 4px;
+        padding: 4px 8px;
+        outline: none;
+      }
+      .dataTables_wrapper input[type="search"]:focus,
+      .dataTables_wrapper select:focus {
+        border-color: var(--accent-blue);
+      }
+      table.dataTable.display tbody tr.odd,
+      table.dataTable.display tbody tr.even {
+        background-color: transparent;
+      }
+      table.dataTable.display tbody tr {
+        border-bottom: 1px solid var(--panel-border);
+        transition: background 0.15s;
+      }
+      table.dataTable.display tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.02);
+      }
+      table.dataTable.display tbody tr td {
+        padding: 10px 14px; /* Tighter row height */
+        font-size: 0.85em; /* Smaller table font */
+      }
+      table.dataTable thead th {
+        border-bottom: 1px solid var(--panel-border);
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-size: 0.75em;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        padding-bottom: 8px;
+      }
+      table.dataTable.no-footer {
+        border-bottom: none;
+      }
+      .text-muted {
+        color: var(--text-muted);
+      }
+      /* Meta Footer & Pivot Table */
+      .meta-footer {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 32px;
+        background: rgba(0, 0, 0, 0.5);
+        border-top: 1px solid var(--panel-border);
+        font-size: 0.85em;
+        color: var(--text-muted);
+        position: fixed;
+        bottom: var(--ticker-height);
+        left: var(--sidebar-width);
+        right: 0;
+        z-index: 150;
+      }
+      .pivot-table {
+        width: 100%;
+        border-collapse: collapse;
+        color: var(--text-bright);
+      }
+      .pivot-header {
+        background: rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        border-bottom: 1px solid var(--panel-border);
+        transition: background 0.2s;
+      }
+      .pivot-header:hover {
+        background: rgba(56, 189, 248, 0.05);
+      }
+      .pivot-header td {
+        padding: 14px;
+        font-weight: 600;
+      }
+      .pivot-child-row {
+        background: transparent;
+        display: none;
+      }
+      .pivot-child-row td {
+        padding: 10px 14px 10px 44px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+        font-size: 0.9em;
+      }
+      .pivot-child-row.open {
+        display: table-row;
+      }
+      .toggle-icon {
+        display: inline-block;
+        width: 24px;
+        font-weight: bold;
+        color: var(--accent-blue);
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <svg
+          width="46"
+          height="46"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          style="margin-bottom: 16px"
+        >
+          <path
+            d="M12 2L2 7l10 5 10-5-10-5z"
+            fill="var(--accent-blue)"
+            fill-opacity="0.15"
+            stroke="var(--accent-blue)"
+            stroke-width="1.5"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M2 12l10 5 10-5"
+            stroke="var(--accent-blue)"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M2 17l10 5 10-5"
+            stroke="var(--accent-blue)"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        Portfolio<br /><span class="logo-accent">Analytics</span>
+      </div>
+      <nav class="nav-links">
+        <a class="tab-link active" onclick="switchTab('dashboardTab')">
+          <svg viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          Dashboard
+        </a>
+        <a class="tab-link" onclick="switchTab('transactionsTab')">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"
+            ></path>
+          </svg>
+          Transactions Ledger
+        </a>
+        <a class="tab-link" onclick="switchTab('reportsTab')">
+          <svg viewBox="0 0 24 24">
+            <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+            <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+          </svg>
+          Grouping Reports
+        </a>
+        <a class="tab-link" onclick="switchTab('hedgeTab')">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          Risk & Hedging
+        </a>
+        <a class="tab-link" onclick="switchTab('taxTab')">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+            ></path>
+          </svg>
+          Tax-Loss Harvester
+        </a>
+        <a class="tab-link" onclick="switchTab('screenerTab')">
+          <svg viewBox="0 0 24 24">
+            <polygon
+              points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"
+            ></polygon>
+          </svg>
+          Fundamental Screener
+        </a>
+        <a class="tab-link" onclick="switchTab('rollingTab')">
+          <svg viewBox="0 0 24 24">
+            <path d="M21 12A9 9 0 0 0 6 5.3L3 8"></path>
+            <path d="M3 3v5h5"></path>
+            <path d="M3 12a9 9 0 0 0 15 6.7l3-2.7"></path>
+            <path d="M21 21v-5h-5"></path>
+          </svg>
+          Rolling Returns
+        </a>
+      </nav>
+    </aside>
+
+    <main class="main-wrapper">
+      <div
+        style="display: flex; gap: 24px; margin-bottom: 32px; flex-wrap: wrap"
+      >
+        <div class="master-controls" style="margin-bottom: 0; flex: 1.5">
+          <div class="sync-label-stack">
+            <span>Database</span>
+            <span style="color: var(--text-bright)">Sync</span>
+          </div>
+
+          <div
+            style="
+              width: 1px;
+              height: 32px;
+              background: var(--panel-border);
+              margin: 0 4px;
+            "
+          ></div>
+
+          <div class="file-upload-wrapper">
+            <label for="txFile" class="custom-file-btn">↑ Transactions</label>
+            <input
+              type="file"
+              id="txFile"
+              accept=".csv"
+              onchange="
+                document.getElementById('txFileName').textContent = this
+                  .files[0]
+                  ? this.files[0].name
+                  : ''
+              "
+            />
+            <span id="txFileName" class="file-name mono"></span>
+          </div>
+
+          <div class="file-upload-wrapper">
+            <label for="pxFile" class="custom-file-btn">↑ Prices</label>
+            <input
+              type="file"
+              id="pxFile"
+              accept=".csv"
+              onchange="
+                document.getElementById('pxFileName').textContent = this
+                  .files[0]
+                  ? this.files[0].name
+                  : ''
+              "
+            />
+            <span id="pxFileName" class="file-name mono"></span>
+          </div>
+
+          <div class="file-upload-wrapper">
+            <label for="metaFile" class="custom-file-btn">↑ Metadata</label>
+            <input
+              type="file"
+              id="metaFile"
+              accept=".csv"
+              onchange="
+                document.getElementById('metaFileName').textContent = this
+                  .files[0]
+                  ? this.files[0].name
+                  : ''
+              "
+            />
+            <span id="metaFileName" class="file-name mono"></span>
+          </div>
+
+          <button
+            id="syncDbBtn"
+            class="btn-primary"
+            style="margin-left: auto; padding: 8px 20px; font-size: 0.9em"
+          >
+            Sync Data
+          </button>
+          <button
+            id="fetchDivBtn"
+            class="btn-primary"
+            style="
+              background: transparent;
+              border: 1px solid var(--accent-blue);
+              color: var(--accent-blue);
+              padding: 8px 20px;
+              font-size: 0.9em;
+            "
+          >
+            ↻ Fetch Dividends
+          </button>
+        </div>
+
+        <div class="master-controls" style="margin-bottom: 0; flex: 1">
+          <div class="control-group">
+            <span class="control-label">Folio</span>
+            <select id="f_folio" class="modern-select">
+              <option value="All">All Entities</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <span class="control-label">Investor</span>
+            <select id="f_investor" class="modern-select">
+              <option value="All">All Investors</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <span class="control-label">Broker</span>
+            <select id="f_demat" class="modern-select">
+              <option value="All">All Demats</option>
+            </select>
+          </div>
+          <span
+            id="loadingTxt"
+            style="
+              margin-left: auto;
+              display: none;
+              color: var(--text-muted);
+              font-size: 0.85em;
+            "
+          >
+            <svg
+              style="
+                animation: spin 1s linear infinite;
+                width: 14px;
+                height: 14px;
+                margin-right: 4px;
+                vertical-align: middle;
+              "
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="12" y1="2" x2="12" y2="6"></line>
+              <line x1="12" y1="18" x2="12" y2="22"></line>
+              <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+              <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+              <line x1="2" y1="12" x2="6" y2="12"></line>
+              <line x1="18" y1="12" x2="22" y2="12"></line>
+              <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+              <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+            </svg>
+            Refreshing...
+          </span>
+          <button
+            class="theme-toggle-btn"
+            onclick="toggleTheme()"
+            title="Toggle Light/Dark Mode"
+          >
+            <svg
+              id="icon-sun"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg
+              id="icon-moon"
+              style="display: none"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="dashboardTab" class="tab-content active">
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <svg class="kpi-bg-icon" viewBox="0 0 24 24">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+            <span class="kpi-label">Current Value</span>
+            <span id="c_val" class="kpi-val mono">–</span>
+          </div>
+
+          <div class="kpi-card">
+            <svg class="kpi-bg-icon" viewBox="0 0 24 24">
+              <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+              <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+            </svg>
+            <span class="kpi-label">Net Invested</span>
+            <span id="i_val" class="kpi-val mono">–</span>
+          </div>
+
+          <div class="kpi-card">
+            <svg class="kpi-bg-icon" viewBox="0 0 24 24">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+              <polyline points="17 6 23 6 23 12"></polyline>
+            </svg>
+            <span class="kpi-label">Absolute Gain</span>
+            <span id="g_val" class="kpi-val mono">–</span>
+          </div>
+
+          <div class="kpi-card">
+            <svg class="kpi-bg-icon" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span class="kpi-label">Time-Weighted XIRR</span>
+            <span
+              id="x_val"
+              class="kpi-val mono"
+              style="color: var(--accent-blue)"
+              >–</span
+            >
+          </div>
+          <div class="kpi-card">
+            <svg class="kpi-bg-icon" viewBox="0 0 24 24">
+              <path
+                d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+              ></path>
+            </svg>
+            <span class="kpi-label">Dividends Collected</span>
+            <span id="div_val" class="kpi-val mono" style="color: #10b981"
+              >–</span
+            >
+          </div>
+        </div>
+
+        <div class="grid-2-col">
+          <div class="panel" style="margin-bottom: 0">
+            <h2>Sector Allocation</h2>
+            <div
+              id="sectorChart"
+              class="chart-container"
+              style="height: 350px"
+            ></div>
+          </div>
+          <div class="panel" style="margin-bottom: 0">
+            <h2>Market Cap Distribution</h2>
+            <div
+              id="mcapChart"
+              class="chart-container"
+              style="height: 350px"
+            ></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Portfolio Trajectory vs Benchmark</h2>
+          <div id="chart" class="chart-container"></div>
+        </div>
+
+        <div class="grid-2-col">
+          <div class="panel" style="margin-bottom: 0">
+            <h2>Family Wealth Contribution</h2>
+            <div
+              id="sunburstChart"
+              class="chart-container"
+              style="height: 400px"
+            ></div>
+          </div>
+          <div class="panel" style="margin-bottom: 0">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-bottom: 12px;
+              "
+            >
+              <h2 style="margin: 0">Holdings Heatmap</h2>
+              <select
+                id="heatmapToggle"
+                class="modern-select"
+                style="
+                  min-width: 140px;
+                  font-size: 0.85em;
+                  padding: 6px 28px 6px 12px;
+                  background-color: transparent;
+                "
+              >
+                <option value="gain">Color: Gain/Loss</option>
+                <option value="risk">Color: Risk (Beta)</option>
+              </select>
+            </div>
+            <div
+              id="heatmap"
+              class="chart-container"
+              style="height: 380px"
+            ></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Live Positions</h2>
+          <table
+            id="holdingsTable"
+            class="display"
+            style="width: 100%; color: var(--text-bright)"
+          >
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Sector</th>
+                <th>Market Cap</th>
+                <th>30D Trend</th>
+                <th>Shares</th>
+                <th>Average Cost</th>
+                <th>Yield on Cost</th>
+                <th>LTP</th>
+                <th>Invested</th>
+                <th>Current Value</th>
+                <th>Unrealised Gain</th>
+                <th>Realised Gain</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="grid-2-col">
+          <div class="panel">
+            <h2 id="todaysGainHeader">Today's Gain/Loss by Folio</h2>
+            <table class="pivot-table" id="todaysGainTable">
+              <tbody></tbody>
+            </table>
+          </div>
+
+          <div class="panel">
+            <h2>Top Movers Today</h2>
+            <div
+              id="topMoversChart"
+              class="chart-container"
+              style="height: 380px"
+            ></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Passive Income (Dividend History)</h2>
+          <div
+            id="divChart"
+            class="chart-container"
+            style="height: 300px"
+          ></div>
+        </div>
+      </div>
+
+      <div id="transactionsTab" class="tab-content">
+        <div class="panel">
+          <h2>Trade Ledger</h2>
+          <table
+            id="txTable"
+            class="display"
+            style="width: 100%; color: var(--text-bright)"
+          >
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Ticker</th>
+                <th>Type</th>
+                <th>Shares</th>
+                <th>Price</th>
+                <th>Folio</th>
+                <th>Investor</th>
+                <th>Demat</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="reportsTab" class="tab-content">
+        <div class="grid-2-col">
+          <div class="panel">
+            <h2>Performance by Folio</h2>
+            <table
+              id="repFolioTable"
+              class="display"
+              style="width: 100%; color: var(--text-bright)"
+            >
+              <thead>
+                <tr>
+                  <th>Folio</th>
+                  <th>Invested</th>
+                  <th>Current Value</th>
+                  <th>Gain</th>
+                  <th>XIRR (%)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="panel">
+            <h2>Performance by Investor</h2>
+            <table
+              id="repInvestorTable"
+              class="display"
+              style="width: 100%; color: var(--text-bright)"
+            >
+              <thead>
+                <tr>
+                  <th>Investor</th>
+                  <th>Invested</th>
+                  <th>Current Value</th>
+                  <th>Gain</th>
+                  <th>XIRR (%)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Performance by Demat</h2>
+          <table
+            id="repDematTable"
+            class="display"
+            style="width: 100%; color: var(--text-bright)"
+          >
+            <thead>
+              <tr>
+                <th>Demat</th>
+                <th>Invested</th>
+                <th>Current Value</th>
+                <th>Gain</th>
+                <th>XIRR (%)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="panel">
+          <h2>Stock Allocation by Demat</h2>
+          <div style="overflow-x: auto">
+            <table
+              id="repStockDematTable"
+              class="display nowrap"
+              style="width: 100%; color: var(--text-bright)"
+            ></table>
+          </div>
+        </div>
+      </div>
+      <div id="hedgeTab" class="tab-content">
+        <div class="grid-2-col">
+          <div class="panel">
+            <h2>Delta Hedging Simulator</h2>
+            <p
+              style="
+                color: var(--text-muted);
+                font-size: 0.9em;
+                margin-bottom: 24px;
+              "
+            >
+              Calculate the required NIFTY Put Option lots to achieve a
+              delta-neutral hedge based on your portfolio's specific volatility.
+            </p>
+
+            <div
+              class="kpi-grid"
+              style="grid-template-columns: 1fr 1fr; margin-bottom: 24px"
+            >
+              <div class="kpi-card">
+                <span class="kpi-label">Portfolio Beta</span
+                ><span id="h_beta" class="kpi-val mono">–</span>
+              </div>
+              <div class="kpi-card">
+                <span class="kpi-label">Beta-Adjusted Exposure</span
+                ><span id="h_exp" class="kpi-val mono">–</span>
+              </div>
+            </div>
+
+            <div
+              class="control-group"
+              style="
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+                background: rgba(0, 0, 0, 0.2);
+                padding: 20px;
+                border-radius: 8px;
+              "
+            >
+              <label
+                class="control-label"
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+                >NIFTY Spot Price:
+                <input
+                  type="number"
+                  id="niftySpot"
+                  value="24500"
+                  class="mono"
+                  style="width: 120px"
+              /></label>
+
+              <div
+                style="
+                  width: 100%;
+                  border-top: 1px dashed var(--panel-border);
+                  padding-top: 12px;
+                  margin-top: -4px;
+                "
+              ></div>
+              <label
+                class="control-label"
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  color: var(--pos-green);
+                "
+                >Put Strike (Buy PE):
+                <input
+                  type="number"
+                  id="putStrike"
+                  value="24000"
+                  class="mono"
+                  style="width: 120px"
+              /></label>
+              <label
+                class="control-label"
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+                >Put Premium Paid (₹):
+                <input
+                  type="number"
+                  id="putPremium"
+                  value="350"
+                  class="mono"
+                  style="width: 120px"
+              /></label>
+
+              <div
+                style="
+                  width: 100%;
+                  border-top: 1px dashed var(--panel-border);
+                  padding-top: 12px;
+                  margin-top: -4px;
+                "
+              ></div>
+              <label
+                class="control-label"
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  color: var(--neg-red);
+                "
+                >Call Strike (Sell CE):
+                <input
+                  type="number"
+                  id="callStrike"
+                  value="25200"
+                  class="mono"
+                  style="width: 120px"
+              /></label>
+              <label
+                class="control-label"
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+                >Call Premium Recv (₹):
+                <input
+                  type="number"
+                  id="callPremium"
+                  value="200"
+                  class="mono"
+                  style="width: 120px"
+              /></label>
+
+              <div
+                style="
+                  width: 100%;
+                  border-top: 1px solid var(--panel-border);
+                  margin: 4px 0;
+                "
+              ></div>
+              <label
+                class="control-label"
+                style="
+                  width: 100%;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                "
+                >NIFTY Lot Size:
+                <input
+                  type="number"
+                  id="niftyLot"
+                  value="65"
+                  class="mono"
+                  readonly
+                  style="width: 120px; opacity: 0.7"
+              /></label>
+
+              <button
+                id="calcHedgeBtn"
+                class="btn-primary"
+                style="width: 100%; margin-top: 10px"
+              >
+                Simulate Collar
+              </button>
+            </div>
+
+            <div
+              class="kpi-card"
+              style="
+                margin-top: 24px;
+                background: rgba(56, 189, 248, 0.1);
+                border-color: var(--accent-blue);
+              "
+            >
+              <span class="kpi-label" style="color: var(--accent-blue)"
+                >Required NIFTY Put Lots</span
+              >
+              <span id="h_lots" class="kpi-val mono" style="font-size: 2.5em"
+                >–</span
+              >
+              <span
+                id="h_cost"
+                style="
+                  color: var(--text-muted);
+                  font-size: 0.9em;
+                  margin-top: 8px;
+                "
+                class="mono"
+                >Total Premium Cost: ₹0</span
+              >
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>Hedge Payoff Matrix</h2>
+            <p
+              style="
+                color: var(--text-muted);
+                font-size: 0.9em;
+                margin-bottom: 24px;
+              "
+            >
+              Visualizing the net portfolio value across severe market drawdowns
+              (Assuming 1 Delta at Expiry).
+            </p>
+            <div id="payoffChart" class="chart-container"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Risk Correlation Matrix (Top 12 Holdings)</h2>
+          <p
+            style="
+              color: var(--text-muted);
+              font-size: 0.9em;
+              margin-bottom: 24px;
+              max-width: 90%;
+            "
+          >
+            Shows how closely your top holdings move together based on
+            historical daily returns. A value near <b>1.0 (Red)</b> means they
+            move in lockstep (high risk overlap). A value near
+            <b>0.0 or negative (Green)</b> means they provide excellent
+            diversification against each other.
+          </p>
+          <div
+            id="corrChart"
+            class="chart-container"
+            style="height: 550px"
+          ></div>
+        </div>
+      </div>
+
+      <div id="taxTab" class="tab-content">
+        <div class="panel">
+          <h2>Tax-Loss Harvester (FIFO)</h2>
+          <p
+            style="
+              color: var(--text-muted);
+              font-size: 0.9em;
+              margin-bottom: 24px;
+              max-width: 90%;
+            "
+          >
+            This engine scans your active portfolio at the granular "tax-lot"
+            level to identify specific shares that are currently at a loss.
+            Selling these exact shares allows you to harvest the loss and offset
+            your realized capital gains.
+            <br /><br /><b>STCL:</b> Short-Term Loss (< 365 days).
+            &nbsp;&nbsp;<b>LTCL:</b> Long-Term Loss (> 365 days).
+          </p>
+
+          <div
+            class="kpi-grid"
+            style="grid-template-columns: 1fr 1fr; margin-bottom: 24px"
+          >
+            <div
+              class="kpi-card"
+              style="
+                background: rgba(239, 68, 68, 0.05);
+                border-color: rgba(239, 68, 68, 0.2);
+              "
+            >
+              <span class="kpi-label" style="color: var(--neg-red)"
+                >Harvestable STCL (Short-Term)</span
+              >
+              <span
+                id="tax_stcl"
+                class="kpi-val mono"
+                style="color: var(--neg-red); font-size: 2em"
+                >–</span
+              >
+            </div>
+            <div
+              class="kpi-card"
+              style="
+                background: rgba(239, 68, 68, 0.05);
+                border-color: rgba(239, 68, 68, 0.2);
+              "
+            >
+              <span class="kpi-label" style="color: var(--neg-red)"
+                >Harvestable LTCL (Long-Term)</span
+              >
+              <span
+                id="tax_ltcl"
+                class="kpi-val mono"
+                style="color: var(--neg-red); font-size: 2em"
+                >–</span
+              >
+            </div>
+          </div>
+
+          <table
+            id="taxTable"
+            class="display"
+            style="width: 100%; color: var(--text-bright)"
+          >
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Buy Date</th>
+                <th>Term</th>
+                <th>Days Held</th>
+                <th>Shares to Sell</th>
+                <th>Buy Price</th>
+                <th>Current Price</th>
+                <th>Harvestable Loss</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="screenerTab" class="tab-content">
+        <div class="panel">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 24px;
+            "
+          >
+            <div>
+              <h2>Business Quality Screener</h2>
+              <p style="color: var(--text-muted); font-size: 0.9em; margin: 0">
+                Scores holdings out of 10 based on ROE, Leverage, Margins, and
+                Growth.
+              </p>
+            </div>
+            <button id="runScreenerBtn" class="btn-primary">
+              Run Fundamental Scan
+            </button>
+          </div>
+
+          <div id="screenerLoading" style="display: none; margin-bottom: 24px">
+            <div
+              class="loading-pulse"
+              style="
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: var(--accent-blue);
+                font-weight: 600;
+                font-size: 0.95em;
+              "
+            >
+              <svg
+                style="
+                  animation: spin 1s linear infinite;
+                  width: 18px;
+                  height: 18px;
+                "
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="12" y1="2" x2="12" y2="6"></line>
+                <line x1="12" y1="18" x2="12" y2="22"></line>
+                <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+                <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+                <line x1="2" y1="12" x2="6" y2="12"></line>
+                <line x1="18" y1="12" x2="22" y2="12"></line>
+                <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+                <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+              </svg>
+              <span>
+                Fetching live fundamentals from Yahoo Finance
+                <span style="color: var(--text-muted); font-weight: 500"
+                  >(This may take 30-60 seconds)...</span
+                >
+              </span>
+            </div>
+          </div>
+
+          <table
+            id="screenerTable"
+            class="display"
+            style="width: 100%; color: var(--text-bright)"
+          >
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Quality Score</th>
+                <th>ROE (%)</th>
+                <th>P/E Ratio</th>
+                <th>EPS (₹)</th>
+                <th>Debt/Equity</th>
+                <th>Op Margin (%)</th>
+                <th>Rev Growth (%)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="rollingTab" class="tab-content">
+        <div class="panel">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              margin-bottom: 24px;
+            "
+          >
+            <div>
+              <h2>Rolling CAGR vs Benchmark</h2>
+              <p
+                style="
+                  color: var(--text-muted);
+                  font-size: 0.9em;
+                  margin: 0;
+                  max-width: 90%;
+                "
+              >
+                This chart removes timing luck by calculating your annualized
+                return on every single day in history. It uses a Time-Weighted
+                NAV to ignore the distortion of cash deposits.
+              </p>
+            </div>
+            <select
+              id="rollingWindowSelect"
+              style="
+                min-width: 160px;
+                font-weight: bold;
+                background: var(--panel-bg);
+              "
+            >
+              <option value="2Y">2-Year Rolling</option>
+              <option value="3Y" selected>3-Year Rolling</option>
+              <option value="5Y">5-Year Rolling</option>
+            </select>
+          </div>
+
+          <div
+            id="rollingWarning"
+            style="
+              display: none;
+              background: rgba(239, 68, 68, 0.1);
+              color: var(--neg-red);
+              padding: 16px;
+              border-radius: 8px;
+              border: 1px solid rgba(239, 68, 68, 0.3);
+              margin-bottom: 20px;
+            "
+          >
+            <b>Insufficient Data:</b> You need more portfolio history to
+            generate a Rolling Return chart for this timeframe.
+          </div>
+
+          <div
+            id="rollingChart"
+            class="chart-container"
+            style="height: 500px"
+          ></div>
+        </div>
+      </div>
+    </main>
+
+    <div class="meta-footer">
+      <span
+        >Last Transaction: <b id="lbl_tx" class="mono text-bright">–</b></span
+      >
+      <span
+        >Price Data Up To: <b id="lbl_px" class="mono text-bright">–</b></span
+      >
+      <span
+        >Dividends Up To: <b id="lbl_div" class="mono text-bright">–</b></span
+      >
+      <span
+        >Last Live Price At:
+        <b
+          id="lbl_live"
+          class="mono text-bright"
+          style="color: var(--accent-blue)"
+          >–</b
+        ></span
+      >
+    </div>
+
+    <div class="ticker-wrap">
+      <div class="ticker-move" id="ticker-content"></div>
+    </div>
+
+    <script>
+      const formatINR = new Intl.NumberFormat("en-IN", {
+        maximumFractionDigits: 0,
+      });
+      const formatDec = new Intl.NumberFormat("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      let isFirstLoad = true;
+
+      // Auto-load dashboard on boot
+      document.addEventListener("DOMContentLoaded", () => {
+        runAnalysis();
+      });
+
+      // Handle Database Sync
+      document
+        .getElementById("syncDbBtn")
+        .addEventListener("click", async function () {
+          const txFile = document.getElementById("txFile").files[0];
+          const pxFile = document.getElementById("pxFile").files[0];
+          const metaFile = document.getElementById("metaFile").files[0]; // NEW
+
+          if (!txFile && !pxFile && !metaFile) {
+            alert("Please select at least one CSV file to sync.");
+            return;
+          }
+
+          const btn = this;
+          btn.innerText = "Syncing...";
+          const formData = new FormData();
+
+          if (txFile) formData.append("transactions", txFile);
+          if (pxFile) formData.append("prices", pxFile);
+          if (metaFile) formData.append("metadata", metaFile); // NEW
+
+          try {
+            const response = await fetch("/api/upload", {
+              method: "POST",
+              body: formData,
+            });
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+
+            alert("Database successfully updated!");
+
+            // Clear inputs
+            document.getElementById("txFile").value = "";
+            document.getElementById("pxFile").value = "";
+            document.getElementById("metaFile").value = "";
+            document.getElementById("txFileName").textContent = "";
+            document.getElementById("pxFileName").textContent = "";
+            document.getElementById("metaFileName").textContent = "";
+
+            runAnalysis();
+          } catch (err) {
+            alert("Sync Error: " + err.message);
+          } finally {
+            btn.innerText = "Sync Data";
+          }
+        });
+      document
+        .getElementById("fetchDivBtn")
+        .addEventListener("click", async function () {
+          const btn = this;
+          const originalText = btn.innerText;
+          btn.innerText = "Scanning Database & Fetching...";
+          btn.disabled = true;
+
+          try {
+            const response = await fetch("/api/fetch_dividends", {
+              method: "POST",
+            });
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+            alert(data.message);
+            runAnalysis(); // Reload to show the new money!
+          } catch (err) {
+            alert("Dividend Fetch Error: " + err.message);
+          } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+          }
+        });
+
+      // Standard Dashboard Logic
+      function switchTab(tabId) {
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((t) => t.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-link")
+          .forEach((l) => l.classList.remove("active"));
+
+        document.getElementById(tabId).classList.add("active");
+        event.target.classList.add("active");
+
+        // Forces DataTables to recalculate widths when a hidden tab is opened
+        $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+        // Forces Plotly charts to expand to full width when a hidden tab is opened
+        window.dispatchEvent(new Event("resize"));
+      }
+
+      // Global function to toggle Pivot Table rows
+      window.togglePivot = function (folioClass) {
+        const rows = document.querySelectorAll("." + folioClass);
+        const icon = document.getElementById("icon_" + folioClass);
+        let isOpen = false;
+
+        rows.forEach((row) => {
+          row.classList.toggle("open");
+          if (row.classList.contains("open")) isOpen = true;
+        });
+
+        icon.innerText = isOpen ? "−" : "+";
+      };
+
+      ["f_folio", "f_investor", "f_demat"].forEach((id) => {
+        document.getElementById(id).addEventListener("change", runAnalysis);
+      });
+      // (Remove the old analyzeBtn event listener entirely, as it no longer exists)
+
+      async function runAnalysis() {
+        document.getElementById("loadingTxt").style.display = "inline-block";
+        const formData = new FormData();
+        // We only send filters now, no files!
+        formData.append("folio", document.getElementById("f_folio").value);
+        formData.append(
+          "investor",
+          document.getElementById("f_investor").value,
+        );
+        formData.append("demat", document.getElementById("f_demat").value);
+
+        try {
+          const response = await fetch("/api/analyze", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await response.json();
+
+          if (data.error) {
+            // Gracefully handle an empty database
+            console.warn(data.error);
+            document.getElementById("loadingTxt").style.display = "none";
+            return;
+          }
+
+          if (isFirstLoad) {
+            populateDropdown("f_folio", data.filters_options.folios);
+            populateDropdown("f_investor", data.filters_options.investors);
+            populateDropdown("f_demat", data.filters_options.demats);
+            isFirstLoad = false;
+          }
+
+          // 1. KPIs
+          document.getElementById("c_val").innerText =
+            "₹" + formatINR.format(data.summary.CurrentValue);
+          document.getElementById("i_val").innerText =
+            "₹" + formatINR.format(data.summary.TotalInvested);
+          document.getElementById("g_val").innerHTML =
+            `<span style="color: ${data.summary.Gain >= 0 ? "var(--pos-green)" : "var(--neg-red)"}">₹${formatINR.format(Math.abs(data.summary.Gain))}</span>`;
+          document.getElementById("x_val").innerText = data.summary.XIRR
+            ? data.summary.XIRR.toFixed(2) + "%"
+            : "N/A";
+
+          // Store globally for the Hedge Simulator
+          window.currentPortfolioValue = data.summary.CurrentValue;
+          window.currentPortfolioBeta = data.summary.Beta;
+          // Store globally for the Screener
+          window.currentTickers = data.holdings.map((h) => h.ScripName);
+
+          // Update Hedge KPIs
+          document.getElementById("h_beta").innerText =
+            data.summary.Beta.toFixed(2);
+          const betaExposure = data.summary.CurrentValue * data.summary.Beta;
+          document.getElementById("h_exp").innerHTML =
+            `<span class="mono">₹${formatINR.format(Math.round(betaExposure))}</span>`;
+
+          // Auto-run the hedge simulation on load
+          simulateHedge();
+
+          // Populate Footer Meta Data
+          document.getElementById("lbl_tx").innerText = data.meta.last_tx_date;
+          document.getElementById("lbl_px").innerText = data.meta.last_px_date;
+          document.getElementById("lbl_live").innerText =
+            data.meta.last_live_time;
+
+          // --- ASYNCHRONOUS LIVE DATA TRIGGER ---
+          // 1. Set the loading state UI immediately
+          document.getElementById("todaysGainHeader").innerHTML =
+            `Today's Gain/Loss <span style="font-size: 0.75em; color: var(--accent-blue); float: right;" class="loading-pulse">⚡ Fetching Live Market Data...</span>`;
+          document.querySelector("#todaysGainTable tbody").innerHTML = "";
+
+          const chartDiv = document.getElementById("topMoversChart");
+          Plotly.purge(chartDiv); // Safely clear old chart
+          chartDiv.innerHTML = `<div class="loading-pulse" style="display: flex; height: 100%; align-items: center; justify-content: center; color: var(--text-muted);">Calculating Top Movers...</div>`;
+
+          // --- DETECT THEME FOR CHARTS ---
+          const isLightMode =
+            document.body.getAttribute("data-theme") === "light";
+          const c_font = isLightMode ? "#4b5563" : "#cbd5e1";
+          const c_grid = isLightMode ? "#e5e7eb" : "rgba(255,255,255,0.05)";
+          const c_invested_fill = isLightMode
+            ? "rgba(245, 158, 11, 0.1)"
+            : "rgba(245, 158, 11, 0.05)";
+
+          // --- UPDATE FOOTER TIMESTAMP ---
+          document.getElementById("lbl_div").innerText =
+            data.meta.last_div_date;
+
+          // 2. Trajectory Chart
+          const chartLayout = {
+            paper_bgcolor: "rgba(0,0,0,0)",
+            plot_bgcolor: "rgba(0,0,0,0)",
+            font: { color: c_font, family: "Inter" }, // <-- Updated
+            hovermode: "x unified",
+            margin: { l: 50, r: 20, t: 20, b: 40 },
+            xaxis: { showgrid: true, gridcolor: c_grid }, // <-- Updated
+            yaxis: { showgrid: true, gridcolor: c_grid, tickprefix: "₹" }, // <-- Updated
+          };
+          Plotly.newPlot(
+            "chart",
+            [
+              {
+                x: data.chart.dates,
+                y: data.chart.portfolio_abs,
+                type: "scatter",
+                name: "Portfolio Value",
+                line: { color: "#38bdf8", width: 3 },
+              },
+              {
+                x: data.chart.dates,
+                y: data.chart.nifty_abs,
+                type: "scatter",
+                name: "Simulated Nifty 50",
+                line: { color: "#64748b", dash: "dot", width: 2 },
+              },
+              {
+                x: data.chart.dates,
+                y: data.chart.invested_abs,
+                type: "scatter",
+                name: "Net Invested",
+                fill: "tozeroy",
+                fillcolor: c_invested_fill,
+                line: { color: "#f59e0b", width: 2 },
+              },
+            ],
+            chartLayout,
+            { responsive: true },
+          );
+
+          // --- SECTOR HORIZONTAL BAR CHART ---
+          // 1. Sort the data so the largest sectors appear at the top
+          // 1. Filter out 'Fixed', then sort so the largest sectors appear at the top
+          const filteredSectors = data.sector_dist.filter(
+            (d) => d.Sector !== "Fixed",
+          );
+          const sortedSectors = [...filteredSectors].sort(
+            (a, b) => a.CurrentValue - b.CurrentValue,
+          );
+
+          // 2. Calculate the total to show percentages on the bars
+          const totalSectorValue = sortedSectors.reduce(
+            (sum, item) => sum + item.CurrentValue,
+            0,
+          );
+
+          Plotly.newPlot(
+            "sectorChart",
+            [
+              {
+                x: sortedSectors.map((d) => d.CurrentValue),
+                y: sortedSectors.map((d) => d.Sector),
+                type: "bar",
+                orientation: "h",
+                marker: {
+                  color: "#38bdf8", // A sleek, uniform institutional blue
+                  opacity: 0.9,
+                },
+                text: sortedSectors.map((d) => {
+                  const pct = (
+                    (d.CurrentValue / totalSectorValue) *
+                    100
+                  ).toFixed(1);
+                  return ` ${pct}%`; // Puts the percentage right next to the bar
+                }),
+                textposition: "outside",
+                textfont: { color: c_font },
+                hovertemplate:
+                  "<b>%{y}</b><br>Value: ₹%{x:,.0f}<extra></extra>",
+              },
+            ],
+            {
+              paper_bgcolor: "rgba(0,0,0,0)",
+              plot_bgcolor: "rgba(0,0,0,0)",
+              font: { color: c_font, family: "Inter" },
+              margin: { l: 110, r: 40, t: 20, b: 20 }, // Extra left margin so sector names aren't cut off
+              xaxis: { showgrid: false, zeroline: false, visible: false }, // Hides the bottom axis for a minimalist look
+              yaxis: { showgrid: false, automargin: true },
+              showlegend: false,
+            },
+            { responsive: true },
+          );
+
+          // Market Cap Donut Chart
+          Plotly.newPlot(
+            "mcapChart",
+            [
+              {
+                values: data.mcap_dist.map((d) => d.CurrentValue),
+                labels: data.mcap_dist.map((d) => d.MarketCap),
+                type: "pie",
+                hole: 0.6,
+                textinfo: "label+percent",
+                marker: { colors: ["#6366f1", "#10b981", "#f43f5e"] },
+              },
+            ],
+            {
+              paper_bgcolor: "rgba(0,0,0,0)",
+              plot_bgcolor: "rgba(0,0,0,0)",
+              font: { color: c_font, family: "Inter" },
+              margin: { l: 20, r: 20, t: 20, b: 20 },
+              showlegend: true,
+              legend: { orientation: "h", y: -0.2 },
+            },
+          );
+
+          // --- FAMILY SUNBURST CHART ---
+          if (data.sunburst_data && data.sunburst_data.length > 0) {
+            const sbIds = ["Family"];
+            const sbLabels = ["Family Wealth"];
+            const sbParents = [""];
+
+            let familyTotal = 0;
+            const invTotals = {};
+
+            // 1. Calculate Totals
+            data.sunburst_data.forEach((d) => {
+              if (d.CurrentValue > 0) {
+                familyTotal += d.CurrentValue;
+                invTotals[d.Investor] =
+                  (invTotals[d.Investor] || 0) + d.CurrentValue;
+              }
+            });
+
+            const sbValues = [familyTotal];
+
+            // 2. Add Investors (The Inner Ring)
+            Object.keys(invTotals).forEach((inv) => {
+              sbIds.push(`inv_${inv}`);
+              sbLabels.push(inv);
+              sbParents.push("Family");
+              sbValues.push(invTotals[inv]);
+            });
+
+            // 3. Add Sectors (The Outer Ring)
+            data.sunburst_data.forEach((d) => {
+              if (d.CurrentValue > 0) {
+                // Format the name slightly so it fits better
+                const sectorName = d.Sector || "Unclassified";
+                const shortSector =
+                  d.Sector.length > 15
+                    ? d.Sector.substring(0, 12) + "..."
+                    : d.Sector;
+                sbIds.push(`sec_${d.Investor}_${d.Sector}`);
+                sbLabels.push(shortSector);
+                sbParents.push(`inv_${d.Investor}`);
+                sbValues.push(d.CurrentValue);
+              }
+            });
+
+            // 4. Draw Chart (Theme Aware)
+            Plotly.newPlot(
+              "sunburstChart",
+              [
+                {
+                  type: "sunburst",
+                  ids: sbIds,
+                  labels: sbLabels,
+                  parents: sbParents,
+                  values: sbValues,
+                  branchvalues: "total",
+                  textinfo: "label+percent parent",
+                  hovertemplate:
+                    "<b>%{label}</b><br>Value: ₹%{value:,.0f}<extra></extra>",
+                  marker: {
+                    line: {
+                      width: 1.5,
+                      color: isLightMode ? "#ffffff" : "#131b26",
+                    },
+                    colors: sbValues,
+                    colorscale: "Blues", // Matches your UI palette beautifully
+                  },
+                },
+              ],
+              {
+                paper_bgcolor: "rgba(0,0,0,0)",
+                plot_bgcolor: "rgba(0,0,0,0)",
+                font: { color: c_font, family: "Inter" },
+                margin: { l: 10, r: 10, t: 10, b: 10 },
+              },
+              { responsive: true },
+            );
+          }
+
+          // --- RISK CORRELATION MATRIX ---
+          if (data.correlation && data.correlation.tickers.length > 0) {
+            const tickers = data.correlation.tickers;
+            const zValues = data.correlation.z_values;
+
+            const corrLayout = {
+              paper_bgcolor: "rgba(0,0,0,0)",
+              plot_bgcolor: "rgba(0,0,0,0)",
+              font: { color: c_font, family: "Inter" },
+              margin: { l: 100, r: 20, t: 20, b: 100 }, // Extra margin for long stock names
+              xaxis: { tickangle: -45 },
+              yaxis: { autorange: "reversed" }, // Standard visual format for correlation matrices
+            };
+
+            // Create the text annotations that sit inside the heatmap boxes
+            const annotations = [];
+            for (let i = 0; i < tickers.length; i++) {
+              for (let j = 0; j < tickers.length; j++) {
+                // Catch nulls or undefined values gracefully
+                let val = zValues[i][j];
+                if (val === null || val === undefined || isNaN(val)) val = 0;
+                // Determine text color for readability against the background
+                let textColor = "#ffffff";
+                if (isLightMode && Math.abs(zValues[i][j]) < 0.4)
+                  textColor = "#334155"; // Dark text for light backgrounds
+
+                annotations.push({
+                  x: tickers[j],
+                  y: tickers[i],
+                  text: zValues[i][j].toFixed(2),
+                  font: { color: textColor, size: 11, family: "Fira Code" },
+                  showarrow: false,
+                });
+              }
+            }
+            corrLayout.annotations = annotations;
+
+            Plotly.newPlot(
+              "corrChart",
+              [
+                {
+                  x: tickers,
+                  y: tickers,
+                  z: zValues,
+                  type: "heatmap",
+                  colorscale: [
+                    [0, "#10b981"], // -0.5 to 0: Emerald Green (Great diversification)
+                    [0.33, isLightMode ? "#e2e8f0" : "#1e293b"], // ~0.0: Neutral Background
+                    [1, "#ef4444"], // 1.0: Danger Red (Exact same movement)
+                  ],
+                  zmin: -0.5,
+                  zmax: 1.0,
+                  hoverongaps: false,
+                  showscale: false, // Hides the color bar on the side to keep it clean
+                  hovertemplate:
+                    "<b>%{y}</b> & <b>%{x}</b><br>Correlation: %{z}<extra></extra>",
+                },
+              ],
+              corrLayout,
+              { responsive: true },
+            );
+          } else {
+            // Fallback if the user hasn't uploaded enough price history
+            document.getElementById("corrChart").innerHTML =
+              "<div style='color:var(--text-muted); padding: 60px; text-align: center; font-weight: 500;'>Not enough historical price data synced to calculate the correlation matrix.</div>";
+          }
+
+          // --- ROLLING RETURNS CHART ---
+          window.currentRollingData = data.chart.rolling;
+
+          // Attach Event Listener to Dropdown (Cleanly replacing old clones to prevent duplicates)
+          const rollSelect = document.getElementById("rollingWindowSelect");
+          const newRollSelect = rollSelect.cloneNode(true);
+          rollSelect.parentNode.replaceChild(newRollSelect, rollSelect);
+
+          newRollSelect.addEventListener("change", function () {
+            renderRollingChart(this.value);
+          });
+
+          // Chart Rendering Function
+          function renderRollingChart(windowKey) {
+            const rData = window.currentRollingData[windowKey];
+
+            if (rData && rData.dates && rData.dates.length > 0) {
+              document.getElementById("rollingWarning").style.display = "none";
+              document.getElementById("rollingChart").style.display = "block";
+
+              // Dark theme colors matching the main Trajectory Chart
+              const pFontColor = c_font;
+              const pGridColor = "rgba(255, 255, 255, 0.05)";
+              const pPortLine = "#38bdf8";
+              const pNiftyLine = "#64748b";
+
+              const rollingLayout = {
+                paper_bgcolor: "rgba(0,0,0,0)",
+                plot_bgcolor: "rgba(0,0,0,0)",
+                font: { color: pFontColor, family: "Inter" },
+                hovermode: "x unified",
+                margin: { l: 50, r: 20, t: 20, b: 40 },
+                xaxis: { showgrid: true, gridcolor: pGridColor },
+                yaxis: {
+                  title: "Annualized Return (CAGR)",
+                  showgrid: true,
+                  gridcolor: pGridColor,
+                  ticksuffix: "%",
+                },
+              };
+
+              Plotly.newPlot(
+                "rollingChart",
+                [
+                  {
+                    x: rData.dates,
+                    y: rData.port,
+                    type: "scatter",
+                    name: `Portfolio ${windowKey} CAGR`,
+                    line: { color: pPortLine, width: 2 },
+                  },
+                  {
+                    x: rData.dates,
+                    y: rData.nifty,
+                    type: "scatter",
+                    name: `NIFTY 50 ${windowKey} CAGR`,
+                    line: { color: pNiftyLine, dash: "dot", width: 2 },
+                  },
+                ],
+                rollingLayout,
+                { responsive: true },
+              );
+            } else {
+              document.getElementById("rollingChart").style.display = "none";
+              document.getElementById("rollingWarning").style.display = "block";
+            }
+          }
+
+          // Initial Render using the currently selected dropdown value
+          renderRollingChart(
+            document.getElementById("rollingWindowSelect").value,
+          );
+
+          // 3. Holdings Heatmap (Treemap - Dual Mode)
+          window.currentHoldingsData = data.holdings;
+
+          function drawHeatmap(mode) {
+            const labels = window.currentHoldingsData.map((h) => h.ScripName);
+            const parents = window.currentHoldingsData.map((h) => "Portfolio");
+            const values = window.currentHoldingsData.map(
+              (h) => h.CurrentValue,
+            );
+
+            let colors, cmin, cmax, cmid, colorscale, hovertemplate;
+
+            if (mode === "gain") {
+              colors = window.currentHoldingsData.map((h) =>
+                h.NetInvested > 0
+                  ? (h.UnrealizedGain / h.NetInvested) * 100
+                  : 0,
+              );
+              cmin = -100;
+              cmax = 100;
+              cmid = 0;
+              // Green for Profit, Red for Loss
+              colorscale = [
+                [0, "#ef4444"],
+                [0.5, isLightMode ? "#94a3b8" : "#16202c"],
+                [1, "#22c55e"],
+              ];
+              hovertemplate =
+                "<b>%{label}</b><br>Value: ₹%{value:,.0f}<br>Gain: %{color:.1f}%<extra></extra>";
+            } else {
+              colors = window.currentHoldingsData.map((h) => h.Beta);
+
+              // Dynamic Relative Risk Scaling
+              const actualMin = Math.min(...colors);
+              const actualMax = Math.max(...colors);
+
+              // Set the floor to 0 (or lower if negative), and ceiling to the highest stock in YOUR portfolio
+              cmin = actualMin < 0 ? actualMin : 0;
+              cmax = actualMax > 0 ? actualMax : 1.0;
+              cmid = (cmin + cmax) / 2;
+
+              // Green for Safe (Lowest Relative Beta), Red for Risky (Highest Relative Beta)
+              colorscale = [
+                [0, "#10b981"],
+                [0.5, isLightMode ? "#94a3b8" : "#1e293b"],
+                [1, "#ef4444"],
+              ];
+              hovertemplate =
+                "<b>%{label}</b><br>Value: ₹%{value:,.0f}<br>Relative Risk: %{color:.3f}<extra></extra>";
+            }
+
+            Plotly.newPlot(
+              "heatmap",
+              [
+                {
+                  type: "treemap",
+                  labels: labels,
+                  parents: parents,
+                  values: values,
+                  marker: {
+                    colors: colors,
+                    colorscale: colorscale,
+                    cmin: cmin,
+                    cmax: cmax,
+                    cmid: cmid,
+                  },
+                  texttemplate: "<b>%{label}</b><br>₹%{value:,.0f}",
+                  hovertemplate: hovertemplate,
+                },
+              ],
+              {
+                paper_bgcolor: "rgba(0,0,0,0)",
+                font: { color: "#ffffff", family: "Inter" }, // White text stays readable across all vibrant background colors
+                margin: { l: 0, r: 0, t: 0, b: 0 },
+              },
+              { responsive: true },
+            );
+          }
+
+          // Attach listener cleanly (removes duplicates)
+          const hmSelect = document.getElementById("heatmapToggle");
+          const newHmSelect = hmSelect.cloneNode(true);
+          hmSelect.parentNode.replaceChild(newHmSelect, hmSelect);
+          newHmSelect.addEventListener("change", function () {
+            drawHeatmap(this.value);
+          });
+
+          // Trigger the initial draw
+          drawHeatmap(document.getElementById("heatmapToggle").value);
+
+          // 4. Update Ticker Tape (With Dynamic Speed)
+          let tickerHtml = "";
+          data.holdings.forEach((h) => {
+            const pct =
+              h.NetInvested > 0
+                ? ((h.UnrealizedGain / h.NetInvested) * 100).toFixed(2)
+                : 0;
+            const color =
+              h.UnrealizedGain >= 0 ? "var(--pos-green)" : "var(--neg-red)";
+            const arrow = h.UnrealizedGain >= 0 ? "▲" : "▼";
+            tickerHtml += `<div class="ticker-item"><span class="ticker-scrip">${h.ScripName}</span> <span class="mono" style="margin-left:4px;">₹${formatDec.format(h["Close Price"])}</span> <span style="color: ${color}; margin-left:8px;" class="mono">${arrow} ${Math.abs(pct)}%</span></div>`;
+          });
+
+          const tickerEl = document.getElementById("ticker-content");
+          tickerEl.innerHTML = tickerHtml;
+
+          // Calculate constant velocity (e.g., 3.5 seconds per stock in the ticker)
+          // Minimum duration of 15 seconds so a single stock doesn't fly across instantly
+          const dynamicDuration = Math.max(15, data.holdings.length * 3.5);
+          tickerEl.style.animationDuration = dynamicDuration + "s";
+
+          // --- DIVIDEND KPI & CHART ---
+          document.getElementById("div_val").innerText =
+            "₹" + formatINR.format(data.dividends.TotalCollected);
+
+          if (data.dividends.History && data.dividends.History.length > 0) {
+            Plotly.newPlot(
+              "divChart",
+              [
+                {
+                  x: data.dividends.History.map((d) => d.Year),
+                  y: data.dividends.History.map((d) => d.Amount),
+                  type: "bar",
+                  marker: { color: "#10b981", opacity: 0.8 },
+                  text: data.dividends.History.map(
+                    (d) => `₹${formatINR.format(d.Amount)}`,
+                  ),
+                  textposition: "outside",
+                  textfont: { color: c_font, family: "mono" },
+                  hovertemplate:
+                    "<b>%{x}</b><br>Collected: ₹%{y:,.0f}<extra></extra>",
+                },
+              ],
+              {
+                paper_bgcolor: "rgba(0,0,0,0)",
+                plot_bgcolor: "rgba(0,0,0,0)",
+                font: { color: c_font, family: "Inter" },
+                margin: { l: 50, r: 20, t: 20, b: 40 },
+                xaxis: { showgrid: false, type: "category" },
+                yaxis: { showgrid: true, gridcolor: c_grid, tickprefix: "₹" },
+              },
+              { responsive: true },
+            );
+          }
+
+          // --- NATIVE DATATABLES FORMATTERS (INDIAN NUMBERING) ---
+          // Custom formatter to force Indian Lakhs/Crores across all monetary columns
+          const renderINRMono = (data, type) => {
+            if (type === "display") {
+              return `<span class="mono">${formatINR.format(data)}</span>`;
+            }
+            return data; // Return raw data for sorting/filtering
+          };
+
+          const renderGain = (data, type) => {
+            if (type === "display") {
+              const color = data >= 0 ? "var(--pos-green)" : "var(--neg-red)";
+              return `<span class="mono" style="color: ${color}; font-weight: 600;">${formatINR.format(data)}</span>`;
+            }
+            return data;
+          };
+          const renderBold = (data, type) =>
+            type === "display" ? `<b>${data}</b>` : data;
+
+          // 5. Update DataTables
+          // SVG Sparkline Generator
+          const renderSparkline = (data, type, row) => {
+            if (type !== "display" || !row.Trend || row.Trend.length === 0)
+              return "";
+            const values = row.Trend;
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+            const range = max - min || 1; // Prevent division by zero
+
+            const width = 80;
+            const height = 24;
+            const step = width / (values.length - 1 || 1);
+
+            // Map data to SVG coordinates
+            const points = values
+              .map((val, i) => {
+                const x = i * step;
+                const y = height - ((val - min) / range) * height;
+                return `${x},${y}`;
+              })
+              .join(" ");
+
+            // Green if 30-day trend is up, Red if down
+            const color =
+              values[values.length - 1] >= values[0]
+                ? "var(--pos-green)"
+                : "var(--neg-red)";
+
+            return `
+              <svg width="${width}" height="${height}" viewBox="0 -2 ${width} ${height + 4}" style="overflow: visible;">
+                <polyline fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="${points}" />
+              </svg>
+            `;
+          };
+
+          updateTable(
+            "#holdingsTable",
+            data.holdings,
+            [
+              { data: "ScripName", render: renderBold },
+              { data: "Sector" },
+              { data: "MarketCap" },
+              { data: "Trend", render: renderSparkline, orderable: false },
+              { data: "TotalShares", render: renderINRMono },
+              {
+                data: "AvgBuyPrice",
+                render: (data, type) =>
+                  type === "display"
+                    ? `<span class="mono">${formatDec.format(data)}</span>`
+                    : data,
+              },
+              {
+                data: "YieldOnCost",
+                render: (data, type) =>
+                  type === "display"
+                    ? `<span class="mono" style="color: #10b981; font-weight: bold;">${data.toFixed(2)}%</span>`
+                    : data,
+              },
+              {
+                data: "Close Price",
+                render: (data, type) =>
+                  type === "display"
+                    ? `<span class="mono">${formatDec.format(data)}</span>`
+                    : data,
+              },
+              { data: "NetInvested", render: renderINRMono },
+              { data: "CurrentValue", render: renderINRMono },
+              { data: "UnrealizedGain", render: renderGain },
+              { data: "RealizedGain", render: renderGain },
+            ],
+            [[10, "desc"]],
+          );
+
+          updateTable(
+            "#txTable",
+            data.transactions,
+            [
+              { data: "Date", className: "mono text-muted" },
+              { data: "ScripName", render: renderBold },
+              {
+                data: "Transaction",
+                render: (data, type) => {
+                  if (type === "display") {
+                    const isBuy = data.toLowerCase() === "buy";
+                    return `<span class="pill ${isBuy ? "pill-buy" : "pill-sell"}">${data}</span>`;
+                  }
+                  return data;
+                },
+              },
+              { data: "ShareNos", className: "mono" },
+              { data: "Price", className: "mono" },
+              { data: "Folio" },
+              { data: "Investor" },
+              { data: "Demat" },
+            ],
+            [[0, "desc"]],
+          );
+
+          const reportCols = [
+            { data: "Group", render: renderBold },
+            { data: "Invested", render: renderINRMono },
+            { data: "CurrentValue", render: renderINRMono },
+            { data: "Gain", render: renderGain },
+            {
+              data: "XIRR",
+              className: "mono",
+              render: (data, type) => {
+                if (type === "display") {
+                  return data
+                    ? `<span style="color: var(--accent-blue); font-weight: 600;">${data.toFixed(2)}%</span>`
+                    : "N/A";
+                }
+                return data;
+              },
+            },
+          ];
+
+          updateTable("#repFolioTable", data.reports.folio, reportCols, [
+            [2, "desc"],
+          ]);
+          updateTable("#repInvestorTable", data.reports.investor, reportCols, [
+            [2, "desc"],
+          ]);
+          updateTable("#repDematTable", data.reports.demat, reportCols, [
+            [2, "desc"],
+          ]);
+
+          // --- TAX-LOSS HARVESTER ---
+          document.getElementById("tax_stcl").innerText =
+            "₹" + formatINR.format(data.tax_harvesting.summary.STCL);
+          document.getElementById("tax_ltcl").innerText =
+            "₹" + formatINR.format(data.tax_harvesting.summary.LTCL);
+
+          updateTable(
+            "#taxTable",
+            data.tax_harvesting.lots,
+            [
+              { data: "ScripName", render: renderBold },
+              { data: "BuyDate", className: "mono" },
+              {
+                data: "Term",
+                render: (data, type) => {
+                  if (type === "display") {
+                    // Amber for Short-Term, Purple for Long-Term
+                    const color = data === "ST" ? "#f59e0b" : "#a855f7";
+                    return `<span style="background: ${color}22; color: ${color}; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 0.85em;">${data}</span>`;
+                  }
+                  return data;
+                },
+              },
+              { data: "DaysHeld", className: "mono text-muted" },
+              { data: "Qty", className: "mono", render: renderINRMono },
+              {
+                data: "BuyPrice",
+                render: (d, t) =>
+                  t === "display"
+                    ? `<span class="mono">₹${formatDec.format(d)}</span>`
+                    : d,
+              },
+              {
+                data: "LTP",
+                render: (d, t) =>
+                  t === "display"
+                    ? `<span class="mono">₹${formatDec.format(d)}</span>`
+                    : d,
+              },
+              { data: "TotalLoss", render: renderGain }, // Will natively format as Red/Negative
+            ],
+            [[7, "asc"]], // Sort by largest negative loss at the top
+          );
+
+          // --- NEW: Dynamic Stock by Demat Matrix ---
+          const dematNames = data.reports.demat_names;
+          let dynamicCols = [
+            { data: "ScripName", title: "Ticker", render: renderBold },
+          ];
+
+          // Generate a pair of columns for every single Demat account found in the DB
+          dematNames.forEach((d) => {
+            dynamicCols.push({
+              data: `${d}_Shares`,
+              title: `${d}<br><span style="color:var(--text-muted); font-size: 0.85em;">Shares</span>`,
+              defaultContent: 0,
+              render: (val, type) => {
+                if (type === "display")
+                  return val
+                    ? `<span class="mono">${formatINR.format(val)}</span>`
+                    : '<span class="mono text-muted">-</span>';
+                return val;
+              },
+            });
+            dynamicCols.push({
+              data: `${d}_Avg`,
+              title: `${d}<br><span style="color:var(--text-muted); font-size: 0.85em;">Avg Cost</span>`,
+              defaultContent: 0,
+              render: (val, type) => {
+                if (type === "display")
+                  return val
+                    ? `<span class="mono">₹${formatDec.format(val)}</span>`
+                    : '<span class="mono text-muted">-</span>';
+                return val;
+              },
+            });
+          });
+
+          // Completely empty the table HTML before re-initializing so old dynamic headers are cleared
+          if ($.fn.dataTable.isDataTable("#repStockDematTable")) {
+            $("#repStockDematTable").DataTable().clear().destroy();
+            $("#repStockDematTable").empty();
+          }
+
+          $("#repStockDematTable").DataTable({
+            data: data.reports.stock_demat_matrix,
+            columns: dynamicCols,
+            order: [[0, "asc"]],
+            pageLength: 15,
+            scrollX: true, // Enables horizontal scrolling if you have many Demat accounts
+            autoWidth: false,
+          });
+        } catch (err) {
+          console.error(err);
+        } finally {
+          document.getElementById("loadingTxt").style.display = "none";
+        }
+        // KICK OFF THE BACKGROUND LIVE PRICE ENGINE
+        fetchLivePrices();
+      }
+
+      async function fetchLivePrices() {
+        const formData = new FormData();
+        formData.append("folio", document.getElementById("f_folio").value);
+        formData.append(
+          "investor",
+          document.getElementById("f_investor").value,
+        );
+        formData.append("demat", document.getElementById("f_demat").value);
+
+        try {
+          const response = await fetch("/api/live_prices", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await response.json();
+
+          // --- 1. RENDER PIVOT TABLE ---
+          const tbody = document.querySelector("#todaysGainTable tbody");
+          let pivotHtml = "";
+          let totalTodayGain = 0;
+          let moverMap = {};
+
+          data.todays_gain.forEach((folio, idx) => {
+            totalTodayGain += folio.TotalTodayGain;
+            const gainColor =
+              folio.TotalTodayGain >= 0 ? "var(--pos-green)" : "var(--neg-red)";
+            const sign = folio.TotalTodayGain >= 0 ? "+" : "";
+
+            pivotHtml += `
+                <tr class="pivot-header" onclick="togglePivot('folio_${idx}')">
+                  <td><span class="toggle-icon" id="icon_folio_${idx}">+</span> ${folio.Folio}</td>
+                  <td class="mono" style="text-align: right; color: ${gainColor}">${sign}₹${formatINR.format(folio.TotalTodayGain)}</td>
+                </tr>`;
+
+            folio.Stocks.forEach((stock) => {
+              const sColor =
+                stock.TodayGain >= 0 ? "var(--pos-green)" : "var(--text-muted)";
+              const sSign = stock.TodayGain >= 0 ? "+" : "";
+              pivotHtml += `
+                    <tr class="pivot-child-row folio_${idx}">
+                      <td><b>${stock.ScripName}</b> <span class="text-muted mono" style="margin-left: 8px; font-size: 0.9em;">(${stock.ShareNos} shares &nbsp;•&nbsp; LTP: ₹${formatDec.format(stock.LTP)})</span></td>
+                      <td class="mono" style="text-align: right; color: ${sColor}">${sSign}₹${formatINR.format(stock.TodayGain)}</td>
+                    </tr>`;
+              moverMap[stock.ScripName] =
+                (moverMap[stock.ScripName] || 0) + stock.TodayGain;
+            });
+          });
+          tbody.innerHTML = pivotHtml;
+
+          // Inject Grand Total into Header
+          const tColor =
+            totalTodayGain >= 0 ? "var(--pos-green)" : "var(--neg-red)";
+          const tSign = totalTodayGain >= 0 ? "+" : "";
+          document.getElementById("todaysGainHeader").innerHTML =
+            `Today's Gain/Loss <span style="color: ${tColor}; font-family: 'Fira Code', monospace; float: right; font-size: 0.9em;">${tSign}₹${formatINR.format(totalTodayGain)}</span>`;
+
+          // --- 2. RENDER TOP MOVERS CHART ---
+          const isLightMode =
+            document.body.getAttribute("data-theme") === "light";
+          const c_font = isLightMode ? "#4b5563" : "#cbd5e1";
+          const c_grid = isLightMode ? "#e5e7eb" : "rgba(255,255,255,0.05)";
+
+          let moversArr = Object.keys(moverMap).map((k) => ({
+            ScripName: k,
+            TodayGain: moverMap[k],
+          }));
+          moversArr.sort((a, b) => b.TodayGain - a.TodayGain);
+
+          let combinedMovers = [...moversArr.slice(0, 5)];
+          moversArr.slice(-5).forEach((b) => {
+            if (!combinedMovers.find((m) => m.ScripName === b.ScripName))
+              combinedMovers.push(b);
+          });
+          combinedMovers.sort((a, b) => a.TodayGain - b.TodayGain);
+
+          const xVals = combinedMovers.map((m) => m.TodayGain);
+          const xMax = Math.max(...xVals, 0);
+          const xMin = Math.min(...xVals, 0);
+
+          document.getElementById("topMoversChart").innerHTML = ""; // Clear loading text
+          Plotly.newPlot(
+            "topMoversChart",
+            [
+              {
+                type: "bar",
+                x: combinedMovers.map((m) => m.TodayGain),
+                y: combinedMovers.map((m) => m.ScripName),
+                orientation: "h",
+                marker: {
+                  color: combinedMovers.map((m) =>
+                    m.TodayGain >= 0 ? "#089981" : "#f23645",
+                  ),
+                },
+                text: combinedMovers.map(
+                  (m) => `₹${formatINR.format(m.TodayGain)}`,
+                ),
+                textposition: "outside",
+                cliponaxis: false,
+                textfont: { color: c_font, family: "mono" },
+                hovertemplate:
+                  "<b>%{y}</b><br>Daily Move: ₹%{x:,.0f}<extra></extra>",
+              },
+            ],
+            {
+              paper_bgcolor: "rgba(0,0,0,0)",
+              plot_bgcolor: "rgba(0,0,0,0)",
+              font: { color: c_font, family: "Inter" },
+              margin: { l: 110, r: 40, t: 20, b: 30 },
+              xaxis: {
+                showgrid: true,
+                gridcolor: c_grid,
+                zerolinecolor: isLightMode ? "#94a3b8" : "#475569",
+                automargin: true,
+                range: [xMin * 1.35, xMax * 1.35],
+              },
+              yaxis: { showgrid: false, automargin: true },
+            },
+            { responsive: true },
+          );
+
+          // Update Footer Timestamp
+          document.getElementById("lbl_live").innerText = data.last_live_time;
+        } catch (err) {
+          console.error("Live Price Engine Error:", err);
+          document.getElementById("todaysGainHeader").innerHTML =
+            `Today's Gain/Loss <span style="color: var(--neg-red); font-size: 0.8em; float: right;">Live Data Unavailable</span>`;
+          document.getElementById("topMoversChart").innerHTML =
+            `<div style="color: var(--neg-red); text-align: center; margin-top: 50px;">Failed to fetch live data.</div>`;
+        }
+      }
+
+      function populateDropdown(id, options) {
+        const select = document.getElementById(id);
+        options.forEach((opt) => {
+          select.add(new Option(opt, opt));
+        });
+      }
+
+      function updateTable(id, data, columns, order) {
+        if ($.fn.dataTable.isDataTable(id)) {
+          $(id).DataTable().clear().destroy();
+        }
+        $(id).DataTable({
+          data: data,
+          columns: columns,
+          order: order,
+          pageLength: 10,
+          autoWidth: false,
+        });
+      }
+      document
+        .getElementById("calcHedgeBtn")
+        .addEventListener("click", simulateHedge);
+
+      function simulateHedge() {
+        if (!window.currentPortfolioValue) return;
+
+        const spot = parseFloat(document.getElementById("niftySpot").value);
+        const putStrike = parseFloat(
+          document.getElementById("putStrike").value,
+        );
+        const putPremium = parseFloat(
+          document.getElementById("putPremium").value,
+        );
+        const callStrike = parseFloat(
+          document.getElementById("callStrike").value,
+        );
+        const callPremium = parseFloat(
+          document.getElementById("callPremium").value,
+        );
+        const lotSize = parseFloat(document.getElementById("niftyLot").value);
+
+        // 1. Calculate Required Lots based on Beta
+        const betaExposure =
+          window.currentPortfolioValue * window.currentPortfolioBeta;
+        const contractValue = spot * lotSize;
+        const exactLots = betaExposure / contractValue;
+        const roundedLots = Math.round(exactLots);
+
+        // Net Premium = Premium Paid for Puts - Premium Received from Calls
+        const netPremiumPerLot = putPremium - callPremium;
+        const totalNetPremiumCost = roundedLots * lotSize * netPremiumPerLot;
+
+        document.getElementById("h_lots").innerText = roundedLots;
+
+        // Format Cost vs Credit
+        const costColor =
+          totalNetPremiumCost > 0 ? "var(--neg-red)" : "var(--pos-green)";
+        const costLabel =
+          totalNetPremiumCost > 0 ? "Net Premium Cost" : "Net Premium Credit";
+        document.getElementById("h_cost").innerHTML =
+          `<span style="color: ${costColor}">${costLabel}: ₹${formatINR.format(Math.abs(totalNetPremiumCost))}</span>`;
+
+        // 2. Generate Payoff Matrix (-20% Crash to +20% Rally)
+        const crashScenarios = [-0.2, -0.1, 0, 0.1, 0.2];
+        const labels = crashScenarios.map(
+          (d) => `${d > 0 ? "+" : ""}${d * 100}%`,
+        );
+
+        const unhedgedValues = [];
+        const hedgedValues = [];
+
+        crashScenarios.forEach((move) => {
+          // Unhedged: Portfolio moves by Market Move * Beta
+          const portMove = move * window.currentPortfolioBeta;
+          const portValueAtExpiry =
+            window.currentPortfolioValue * (1 + portMove);
+          unhedgedValues.push(portValueAtExpiry);
+
+          // Hedged Calculation
+          const marketLevelAtExpiry = spot * (1 + move);
+
+          // Long Put Payoff: Max(0, Strike - Market)
+          const putPayoff =
+            Math.max(0, putStrike - marketLevelAtExpiry) *
+            roundedLots *
+            lotSize;
+
+          // Short Call Payoff: -Max(0, Market - Strike)
+          const callPayoff =
+            -Math.max(0, marketLevelAtExpiry - callStrike) *
+            roundedLots *
+            lotSize;
+
+          // Net = Portfolio Value + Option Payoffs - Initial Net Premium
+          const netHedgedValue =
+            portValueAtExpiry + putPayoff + callPayoff - totalNetPremiumCost;
+          hedgedValues.push(netHedgedValue);
+        });
+
+        // 3. Render Payoff Chart
+        const isLightMode =
+          document.body.getAttribute("data-theme") === "light";
+        const c_font = isLightMode ? "#4b5563" : "#cbd5e1";
+        const c_grid = isLightMode ? "#e5e7eb" : "rgba(255, 255, 255, 0.05)";
+
+        const payoffLayout = {
+          paper_bgcolor: "rgba(0,0,0,0)",
+          plot_bgcolor: "rgba(0,0,0,0)",
+          font: { color: c_font, family: "Inter" },
+          hovermode: "x unified",
+          margin: { l: 50, r: 20, t: 20, b: 40 },
+          xaxis: {
+            title: "NIFTY Move at Expiry",
+            showgrid: true,
+            gridcolor: c_grid,
+          },
+          yaxis: {
+            title: "Net Portfolio Value (₹)",
+            showgrid: true,
+            gridcolor: c_grid,
+            tickprefix: "₹",
+          },
+          barmode: "group",
+        };
+
+        Plotly.newPlot(
+          "payoffChart",
+          [
+            {
+              x: labels,
+              y: unhedgedValues,
+              type: "bar",
+              name: "Unhedged Value",
+              marker: { color: "#64748b" },
+            },
+            {
+              x: labels,
+              y: hedgedValues,
+              type: "bar",
+              name: "Collar Hedged Value",
+              marker: { color: "#38bdf8" },
+            },
+          ],
+          payoffLayout,
+          { responsive: true },
+        );
+      }
+
+      // --- FUNDAMENTAL SCREENER LOGIC ---
+      document
+        .getElementById("runScreenerBtn")
+        .addEventListener("click", async function () {
+          if (!window.currentTickers || window.currentTickers.length === 0) {
+            alert("Please run the main portfolio analytics first.");
+            return;
+          }
+
+          document.getElementById("screenerLoading").style.display = "block";
+          this.disabled = true;
+
+          try {
+            // 1. Pre-filter obvious ETFs to save backend API time
+            const equityTickers = window.currentTickers.filter((t) => {
+              const name = t.toUpperCase();
+              return (
+                !name.includes("BEES") &&
+                !name.includes("ETF") &&
+                !name.includes("LIQUID") &&
+                !name.includes("SGB") // Catches Sovereign Gold Bonds
+              );
+            });
+
+            // 2. Send only the cleaned equity list to the backend
+            const response = await fetch("/api/fundamentals", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ tickers: equityTickers }),
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+
+            // Custom Formatter for the Quality Score Badge
+            const renderScore = (data, type) => {
+              if (type === "display") {
+                let color = "var(--neg-red)";
+                if (data >= 8) color = "var(--pos-green)";
+                else if (data >= 5) color = "#f59e0b"; // Amber warning
+
+                return `<span style="background: ${color}22; color: ${color}; padding: 4px 10px; border-radius: 6px; font-weight: bold; border: 1px solid ${color}55;">${data} / 10</span>`;
+              }
+              return data;
+            };
+
+            updateTable(
+              "#screenerTable",
+              data,
+              [
+                {
+                  data: "Ticker",
+                  render: (data, type) =>
+                    type === "display" ? `<b>${data}</b>` : data,
+                },
+                { data: "QualityScore", render: renderScore },
+                {
+                  data: "ROE",
+                  render: (data, type) => {
+                    if (type === "display")
+                      return data !== null
+                        ? `<span class="mono">${data.toFixed(2)}%</span>`
+                        : '<span class="mono text-muted">N/A</span>';
+                    return data;
+                  },
+                },
+                {
+                  data: "PE",
+                  render: (data, type) => {
+                    if (type === "display")
+                      return data !== null
+                        ? `<span class="mono">${data.toFixed(2)}x</span>`
+                        : '<span class="mono text-muted">N/A</span>';
+                    return data;
+                  },
+                },
+                {
+                  data: "EPS",
+                  render: (data, type) => {
+                    if (type === "display")
+                      return data !== null
+                        ? `<span class="mono">₹${data.toFixed(2)}</span>`
+                        : '<span class="mono text-muted">N/A</span>';
+                    return data;
+                  },
+                },
+                {
+                  data: "DebtToEquity",
+                  render: (data, type) => {
+                    if (type === "display")
+                      return data !== null
+                        ? `<span class="mono">${(data / 100).toFixed(2)}x</span>`
+                        : '<span class="mono text-muted">N/A</span>';
+                    return data;
+                  },
+                },
+                {
+                  data: "OpMargin",
+                  render: (data, type) => {
+                    if (type === "display")
+                      return data !== null
+                        ? `<span class="mono">${data.toFixed(2)}%</span>`
+                        : '<span class="mono text-muted">N/A</span>';
+                    return data;
+                  },
+                },
+                {
+                  data: "RevGrowth",
+                  render: (data, type) => {
+                    if (type === "display")
+                      return data !== null
+                        ? `<span class="mono">${data.toFixed(2)}%</span>`
+                        : '<span class="mono text-muted">N/A</span>';
+                    return data;
+                  },
+                },
+              ],
+              [[1, "desc"]],
+            ); // Sort by Quality Score descending
+          } catch (err) {
+            console.error(err);
+            alert("Failed to fetch fundamentals.");
+          } finally {
+            document.getElementById("screenerLoading").style.display = "none";
+            document.getElementById("runScreenerBtn").disabled = false;
+          }
+        });
+
+      function toggleTheme() {
+        const body = document.body;
+        const isLight = body.getAttribute("data-theme") === "light";
+
+        if (isLight) {
+          body.removeAttribute("data-theme");
+          document.getElementById("icon-sun").style.display = "block";
+          document.getElementById("icon-moon").style.display = "none";
+          localStorage.setItem("portfolio_theme", "dark");
+        } else {
+          body.setAttribute("data-theme", "light");
+          document.getElementById("icon-sun").style.display = "none";
+          document.getElementById("icon-moon").style.display = "block";
+          localStorage.setItem("portfolio_theme", "light");
+        }
+
+        // Redraw all the charts so they pick up the new contrast colors!
+        runAnalysis();
+      }
+
+      // Check memory on boot to set the right theme instantly
+      document.addEventListener("DOMContentLoaded", () => {
+        if (localStorage.getItem("portfolio_theme") === "light") {
+          document.body.setAttribute("data-theme", "light");
+          document.getElementById("icon-sun").style.display = "none";
+          document.getElementById("icon-moon").style.display = "block";
+        }
+      });
+    </script>
+  </body>
+</html>
